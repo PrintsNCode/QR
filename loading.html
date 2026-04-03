@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>En Construcción — PrintsNCode</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--dark:#050A10;--text:#C8E8FF}
+html,body{width:100%}
+body{background:var(--dark);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden;position:relative;}
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle var(--d) ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,180,255,.015) 2px,rgba(0,180,255,.015) 4px)}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(0,180,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,180,255,.04) 1px,transparent 1px);background-size:40px 40px;animation:gridMove 20s linear infinite}
+@keyframes gridMove{from{background-position:0 0}to{background-position:40px 40px}}
+
+/* TAPE */
+.tape{position:fixed;z-index:200;width:120%;left:-10%;height:36px;background:repeating-linear-gradient(-45deg,#FFD600 0,#FFD600 20px,#1a1a1a 20px,#1a1a1a 40px);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 20px rgba(255,214,0,.4)}
+.tape.top{top:0;transform:rotate(-1deg)}.tape.bottom{bottom:0;transform:rotate(1deg)}
+.tape-text{background:#000;color:#FFD600;padding:2px 20px;letter-spacing:6px;white-space:nowrap;font-family:'Orbitron',sans-serif;font-weight:900;font-size:11px;animation:tapeMarch 8s linear infinite}
+@keyframes tapeMarch{from{transform:translateX(-30px)}to{transform:translateX(30px)}}
+
+/* LAYOUT */
+.container{position:relative;z-index:10;max-width:1100px;margin:0 auto;padding:60px 20px 0;display:flex;flex-direction:column;align-items:center;gap:32px;}
+.brand-tape{
+  position:relative;
+  background:repeating-linear-gradient(-45deg,#FFD600 0,#FFD600 18px,#1a1a1a 18px,#1a1a1a 36px);
+  padding:0 32px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 24px rgba(255,214,0,.45), 0 0 60px rgba(255,214,0,.15);
+  transform:rotate(-1deg);
+}
+.brand-text{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(18px,3vw,26px);
+  letter-spacing:8px;color:#FFD600;
+  background:#000;padding:6px 22px;
+  text-shadow:0 0 12px rgba(255,214,0,.7);
+  white-space:nowrap;
+}
+.title-block{text-align:center}
+.title-main{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(36px,7vw,72px);line-height:1;background:linear-gradient(90deg,#FFD600,#FF6D00,#FFD600);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shine 3s linear infinite;letter-spacing:2px}
+@keyframes shine{from{background-position:0%}to{background-position:200%}}
+.title-sub{font-size:clamp(12px,2vw,16px);color:#00B4FF;letter-spacing:6px;margin-top:8px;text-transform:uppercase;animation:blink 1.5s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ══════════════════════════════════════
+   LIGHTSABER PROGRESS BARS
+   ══════════════════════════════════════ */
+.progress-panel{width:100%;max-width:600px;border:1px solid #1A3A5A;background:rgba(10,20,32,.85);padding:20px 28px;border-radius:4px;position:relative;backdrop-filter:blur(10px)}
+.progress-panel::before{content:'[ SISTEMA::CONSTRUCCIÓN ]';position:absolute;top:-11px;left:20px;background:var(--dark);padding:0 8px;font-size:10px;color:#00B4FF;letter-spacing:3px}
+.prog-row{margin-bottom:16px}
+.prog-label{font-size:10px;color:#7A9AB5;margin-bottom:5px;letter-spacing:2px;display:flex;justify-content:space-between;align-items:center}
+.prog-pct{font-size:10px;font-family:'Orbitron',sans-serif;font-weight:700}
+
+/* Saber track */
+.saber-track{height:14px;background:rgba(0,0,0,.6);border-radius:7px;position:relative;overflow:visible;border:1px solid rgba(255,255,255,.06)}
+/* Hilt at left */
+.saber-hilt{position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:14px;height:22px;border-radius:3px;background:linear-gradient(180deg,#888,#444);border:1px solid #222;z-index:2;box-shadow:1px 0 4px rgba(0,0,0,.6)}
+.saber-hilt::before{content:'';position:absolute;top:3px;left:2px;right:2px;height:3px;background:rgba(255,255,255,.3);border-radius:2px}
+.saber-hilt::after{content:'';position:absolute;bottom:4px;left:3px;width:5px;height:5px;border-radius:50%;background:#333;border:1px solid #555}
+/* Blade fill */
+.saber-blade{height:100%;border-radius:0 6px 6px 0;position:relative;animation:fillUp 3s ease-out forwards, bladePulse 1.5s ease-in-out 3s infinite;transition:width .3s}
+.saber-blade::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(255,255,255,.0) 60%,rgba(255,255,255,.55) 85%,rgba(255,255,255,.0) 100%);animation:bladeShine 2s ease-in-out infinite}
+@keyframes bladeShine{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+@keyframes bladePulse{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.85;filter:brightness(1.3)}}
+@keyframes fillUp{from{width:0%}}
+/* Tip glow */
+.saber-tip{position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;pointer-events:none;animation:tipGlow 1.5s ease-in-out infinite}
+@keyframes tipGlow{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.4)}}
+
+/* Color themes per saber */
+.saber-red .saber-blade{background:linear-gradient(90deg,#880000,#FF2200,#FF6644);box-shadow:0 0 8px #FF2200,0 0 18px #FF000088,0 0 35px #FF000044}
+.saber-red .saber-tip{background:#FF2200;box-shadow:0 0 10px #FF2200,0 0 22px #FF000099}
+.saber-red .prog-pct{color:#FF4422}
+.saber-blue .saber-blade{background:linear-gradient(90deg,#001166,#0055FF,#66AAFF);box-shadow:0 0 8px #0066FF,0 0 18px #0044FF88,0 0 35px #0022FF44}
+.saber-blue .saber-tip{background:#0066FF;box-shadow:0 0 10px #0066FF,0 0 22px #0044FF99}
+.saber-blue .prog-pct{color:#44AAFF}
+.saber-green .saber-blade{background:linear-gradient(90deg,#003300,#00CC44,#66FF88);box-shadow:0 0 8px #00CC44,0 0 18px #00AA3388,0 0 35px #00882244}
+.saber-green .saber-tip{background:#00CC44;box-shadow:0 0 10px #00CC44,0 0 22px #00AA3399}
+.saber-green .prog-pct{color:#44FF88}
+.saber-purple .saber-blade{background:linear-gradient(90deg,#220044,#8800FF,#CC66FF);box-shadow:0 0 8px #8800FF,0 0 18px #6600CC88,0 0 35px #44008844}
+.saber-purple .saber-tip{background:#8800FF;box-shadow:0 0 10px #8800FF,0 0 22px #6600CC99}
+.saber-purple .prog-pct{color:#CC66FF}
+
+/* HUD */
+.hud-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%;max-width:920px}
+.hud-panel{flex:1;min-width:190px;border:1px solid #1A3A5A;background:rgba(10,20,32,.85);padding:14px 18px;border-radius:4px;position:relative;backdrop-filter:blur(8px)}
+.hud-panel::before{content:attr(data-label);position:absolute;top:-10px;left:12px;background:var(--dark);padding:0 6px;font-size:9px;color:#00B4FF;letter-spacing:3px}
+.hud-panel.glow{box-shadow:0 0 20px rgba(0,180,255,.15)}
+.hud-stat{font-size:13px;color:#7A9AB5;margin-bottom:4px}
+.hud-val{font-size:20px;font-family:'Orbitron',sans-serif;font-weight:700}
+.hud-val.amber{color:#FFD600}.hud-val.cyan{color:#00B4FF}.hud-val.green{color:#00FF9D}
+.hud-val.red{color:#FF3333;animation:redPulse .5s ease-in-out infinite}
+@keyframes redPulse{0%,100%{text-shadow:0 0 8px #FF0000}50%{text-shadow:0 0 20px #FF0000,0 0 40px #FF000066}}
+
+/* TERMINAL */
+.terminal{width:100%;max-width:920px;border:1px solid #1A3A5A;background:rgba(2,8,14,.9);padding:16px;border-radius:4px;font-size:11px;line-height:1.8;position:relative;max-height:160px;overflow-y:auto}
+.terminal::before{content:'[ LOG::SISTEMA ]';position:absolute;top:-10px;left:12px;background:var(--dark);padding:0 6px;font-size:9px;color:#00FF9D;letter-spacing:3px}
+.log-line{color:#4A8A6A}.log-line.warn{color:#FFD600}.log-line.err{color:#FF4444}.log-line.info{color:#00B4FF}.log-line.chaos{color:#FF44FF}
+.log-cursor{display:inline-block;width:7px;height:13px;background:#00FF9D;vertical-align:middle;animation:blink 1s step-end infinite;margin-left:4px}
+.footer{text-align:center;font-size:10px;color:#3A5A7A;letter-spacing:3px;margin-top:8px}
+
+/* FORCE PARTICLES */
+.force-particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.fp{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,0,0,.5),transparent);animation:fpFloat var(--d) linear infinite;opacity:0}
+@keyframes fpFloat{0%{opacity:0;transform:translateY(100vh) scale(0)}10%{opacity:.5}90%{opacity:.15}100%{opacity:0;transform:translateY(-20vh) scale(1.5)}}
+
+/* ══════════════════════════════════════
+   SPACE SHIPS BACKGROUND LAYER
+   ══════════════════════════════════════ */
+#shipLayer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.ship-wrap{position:absolute;pointer-events:none}
+.ship-wrap svg{display:block}
+
+/* ══════════════════════════════════════
+   RETRO SHOOTER GAME
+   ══════════════════════════════════════ */
+#gameWidget{
+  width:100%;max-width:920px;
+  border:1px solid #1A3A5A;
+  background:rgba(2,6,14,.92);
+  border-radius:4px;position:relative;
+  backdrop-filter:blur(8px);
+  overflow:hidden;
+}
+#gameWidget::before{content:'[ GALACTIC DEFENDER — SPACE / TOCA PARA JUGAR ]';position:absolute;top:-10px;left:12px;background:var(--dark);padding:0 6px;font-size:9px;color:#FFD600;letter-spacing:2px;white-space:nowrap;z-index:10}
+#gameCanvas{display:block;width:100%;height:220px;cursor:crosshair;image-rendering:pixelated}
+#gameOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,6,14,.88);z-index:5;gap:12px}
+#gameOverlay .g-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(18px,3vw,28px);color:#FFD600;text-shadow:0 0 20px #FFD600;letter-spacing:3px}
+#gameOverlay .g-sub{font-size:12px;color:#7A9AB5;letter-spacing:3px}
+#gameOverlay .g-score{font-family:'Orbitron',sans-serif;font-size:14px;color:#00FF9D}
+#gameStats{position:absolute;top:8px;left:10px;font-size:10px;font-family:'Orbitron',sans-serif;color:#00B4FF;z-index:6;pointer-events:none;letter-spacing:1px}
+#gameLives{position:absolute;top:8px;right:10px;font-size:10px;font-family:'Orbitron',sans-serif;color:#FF4444;z-index:6;pointer-events:none}
+
+/* CHARACTER LAYER */
+#charLayer{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden}
+.lchar{position:absolute;pointer-events:all;cursor:pointer;will-change:transform;filter:drop-shadow(0 4px 6px rgba(0,0,0,.7));transition:filter .15s}
+.lchar:hover{filter:drop-shadow(0 4px 6px rgba(0,0,0,.7)) drop-shadow(0 0 14px rgba(255,214,0,.8))}
+.lchar svg{display:block;image-rendering:pixelated}
+.lbubble{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:rgba(3,8,20,.97);border:1.5px solid #00B4FF;border-radius:9px;padding:5px 11px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#00E8FF;white-space:nowrap;pointer-events:none;z-index:600;animation:bubblePop .15s ease-out;box-shadow:0 0 10px rgba(0,180,255,.3)}
+.lbubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#00B4FF}
+.lbubble.minion{border-color:#FFD600;color:#FFE040}.lbubble.minion::after{border-top-color:#FFD600}
+.lbubble.vader{border-color:#FF2222;color:#FF7070}.lbubble.vader::after{border-top-color:#FF2222}
+.lbubble.r2{border-color:#00FF9D;color:#80FFD0}.lbubble.r2::after{border-top-color:#00FF9D}
+@keyframes bubblePop{from{transform:translateX(-50%) scale(.4);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+
+/* GLOBAL FX */
+.glitch{animation:glitchAnim .4s steps(2) 3!important}
+@keyframes glitchAnim{0%{transform:skewX(0);filter:none}20%{transform:skewX(-6deg);filter:hue-rotate(90deg) brightness(2.5)}40%{transform:skewX(6deg) translateX(5px);filter:hue-rotate(-90deg)}60%{transform:skewX(-3deg) translateX(-5px);filter:none}80%{transform:skewX(2deg);filter:hue-rotate(180deg) brightness(2)}100%{transform:skewX(0);filter:none}}
+.shake-body{animation:screenShake .5s ease-in-out}
+@keyframes screenShake{0%,100%{transform:translate(0,0)}15%{transform:translate(-5px,3px)}30%{transform:translate(5px,-3px)}45%{transform:translate(-4px,2px)}60%{transform:translate(4px,-2px)}75%{transform:translate(-2px,1px)}}
+.force-wave{position:fixed;inset:0;z-index:800;pointer-events:none;border:8px solid rgba(220,0,0,.85);box-shadow:inset 0 0 80px rgba(200,0,0,.4),0 0 80px rgba(200,0,0,.4);animation:forceWave 1.8s ease-out forwards}
+@keyframes forceWave{0%{opacity:1}40%{opacity:.9}100%{opacity:0}}
+.dark-side{position:fixed;inset:0;z-index:700;pointer-events:none;background:rgba(70,0,0,.38);animation:darkSide 2.8s ease-in-out forwards}
+@keyframes darkSide{0%{opacity:0}25%{opacity:1}75%{opacity:1}100%{opacity:0}}
+.scan-beam{position:fixed;top:0;z-index:600;pointer-events:none;width:3px;height:100vh;background:linear-gradient(180deg,transparent,#00B4FF,#00FF9D,transparent);box-shadow:0 0 20px #00B4FF,0 0 40px rgba(0,180,255,.5);animation:scanMove 1.5s ease-in-out forwards}
+@keyframes scanMove{0%{left:-5px;opacity:1}100%{left:calc(100vw + 5px);opacity:.3}}
+.banana-drop{position:fixed;font-size:28px;z-index:600;pointer-events:none;animation:bananaFall var(--d) ease-in forwards}
+@keyframes bananaFall{0%{transform:translateY(-60px) rotate(0deg);opacity:1}100%{transform:translateY(102vh) rotate(720deg);opacity:0}}
+.brick-drop{position:fixed;z-index:600;pointer-events:none;width:16px;height:10px;border-radius:2px;animation:brickFall var(--d) ease-in forwards}
+@keyframes brickFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(102vh) rotate(540deg);opacity:0}}
+.deleting{animation:deleteAnim .9s ease-in-out forwards}
+@keyframes deleteAnim{0%{opacity:1;transform:scale(1)}25%{transform:scale(1.08) skewX(4deg);filter:brightness(3)}55%{opacity:.4;transform:scale(.7) skewX(-8deg);filter:brightness(5) hue-rotate(160deg)}100%{opacity:0;transform:scale(0) rotate(15deg)}}
+.scratch-overlay{position:fixed;inset:0;z-index:750;pointer-events:none;background:linear-gradient(23deg,transparent 44%,rgba(255,255,255,.04) 45%,transparent 46%),linear-gradient(-67deg,transparent 37%,rgba(255,255,255,.03) 38%,transparent 39%);animation:scratchFade 1.2s ease-out forwards}
+@keyframes scratchFade{0%{opacity:1}100%{opacity:0}}
+.rainbow-mode{animation:rainbowBg .2s steps(1) infinite}
+@keyframes rainbowBg{0%{filter:hue-rotate(0deg)}16%{filter:hue-rotate(60deg)}33%{filter:hue-rotate(120deg)}50%{filter:hue-rotate(180deg)}66%{filter:hue-rotate(240deg)}83%{filter:hue-rotate(300deg)}100%{filter:hue-rotate(360deg)}}
+@keyframes saberPulse{0%,100%{filter:drop-shadow(0 0 3px #FF0000) drop-shadow(0 0 8px #FF000088)}50%{filter:drop-shadow(0 0 6px #FF4444) drop-shadow(0 0 16px #FF000099)}}
+
+
+
+.dev-footer-github:hover{color:#00B4FF;}
+.dev-footer-github svg{color:#3A6A88;transition:color .2s;flex-shrink:0;}
+.dev-footer-github:hover svg{color:#00B4FF;}
+.dev-footer-tagline em{font-style:italic;color:#1A3045;}
+
+/* ══ RESPONSIVE ══════════════════════════════════ */
+@media(max-width:900px){
+  .hud-row{gap:10px;}
+  .hud-panel{min-width:140px;padding:10px 12px;}
+  .progress-panel{padding:16px 18px;}
+  #gameCanvas{height:180px;}
+}
+@media(max-width:700px){
+  .container{padding:52px 12px 0;}
+  .brand-tape{padding:0 16px;}
+  .brand-text{font-size:clamp(14px,5vw,22px);letter-spacing:4px;padding:5px 14px;}
+  .title-main{font-size:clamp(28px,9vw,56px);}
+  .title-sub{font-size:11px;letter-spacing:3px;}
+  .hud-row{flex-direction:column;gap:8px;}
+  .hud-panel{min-width:unset;width:100%;}
+  .progress-panel{padding:14px 14px;}
+  .saber-hilt{left:-10px;width:10px;height:18px;}
+  .saber-track{margin-left:14px;}
+  #gameCanvas{height:160px;}
+  #gameWidget::before{font-size:8px;}
+  .terminal{font-size:10px;padding:12px;}
+}
+@media(max-width:480px){
+  .container{padding:48px 10px 0;}
+  .tape-text{font-size:9px;letter-spacing:3px;}
+  .title-main{font-size:clamp(24px,10vw,44px);}
+  .hud-val{font-size:16px;}
+  .hud-stat{font-size:11px;}
+  #gameCanvas{height:140px;}
+  .prog-label{font-size:9px;}
+}
+
+/* ══ CHAT WIDGET ══════════════════════════════════════ */
+.chat-widget{
+  width:100%;max-width:920px;
+  border:1px solid #1A3A5A;
+  background:rgba(4,10,20,.92);
+  border-radius:4px;position:relative;
+  backdrop-filter:blur(8px);
+}
+.chat-widget::before{
+  content:'[ COMM::CHANNEL — ESCRIBE UN MENSAJE ]';
+  position:absolute;top:-10px;left:12px;
+  background:var(--dark);padding:0 6px;
+  font-size:9px;color:#FFD600;letter-spacing:2px;
+}
+.chat-messages{
+  height:200px;overflow-y:auto;
+  padding:14px 16px;
+  display:flex;flex-direction:column;gap:8px;
+  scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:#1A3A5A;border-radius:2px}
+.chat-msg{
+  display:flex;flex-direction:column;gap:2px;
+  animation:msgPop .15s ease-out;
+  max-width:80%;
+}
+@keyframes msgPop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{align-self:flex-end;align-items:flex-end;}
+.chat-msg.bot{align-self:flex-start;align-items:flex-start;}
+.chat-bubble{
+  padding:7px 12px;border-radius:10px;
+  font-size:12px;line-height:1.5;
+  font-family:'Share Tech Mono',monospace;
+  max-width:100%;word-break:break-word;
+}
+.chat-msg.user .chat-bubble{
+  background:rgba(0,80,140,.5);
+  border:1px solid #1A5A8A;
+  color:#A0D4F4;
+  border-radius:10px 10px 2px 10px;
+}
+.chat-msg.bot .chat-bubble{
+  background:rgba(8,20,35,.8);
+  border:1px solid #1A3A5A;
+  color:#7AB8D4;
+  border-radius:10px 10px 10px 2px;
+}
+.chat-msg.bot.minion .chat-bubble{border-color:#CC9900;color:#FFE040;background:rgba(30,20,0,.7);}
+.chat-msg.bot.vader .chat-bubble{border-color:#880000;color:#FF7070;background:rgba(20,0,0,.7);}
+.chat-msg.bot.r2 .chat-bubble{border-color:#009966;color:#80FFD0;background:rgba(0,20,15,.7);}
+.chat-msg.bot.lego .chat-bubble{border-color:#CC6600;color:#FFAA44;background:rgba(25,12,0,.7);}
+.chat-sender{
+  font-size:9px;letter-spacing:2px;
+  font-family:'Orbitron',sans-serif;font-weight:700;
+  margin:0 4px;
+}
+.chat-msg.user .chat-sender{color:#3A6A8A;}
+.chat-msg.bot .chat-sender{color:#2A5A6A;}
+.chat-msg.bot.minion .chat-sender{color:#CC9900;}
+.chat-msg.bot.vader .chat-sender{color:#880000;}
+.chat-msg.bot.r2 .chat-sender{color:#009966;}
+.chat-msg.bot.lego .chat-sender{color:#CC6600;}
+.chat-typing{
+  font-size:11px;color:#2A4A5A;
+  padding:4px 16px 6px;
+  font-family:'Share Tech Mono',monospace;
+  min-height:22px;
+  font-style:italic;
+  letter-spacing:1px;
+}
+.chat-input-row{
+  display:flex;gap:0;
+  border-top:1px solid #0D2035;
+}
+.chat-input{
+  flex:1;background:transparent;border:none;outline:none;
+  padding:10px 16px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;color:#C8E8FF;
+  letter-spacing:.5px;
+  caret-color:#00B4FF;
+}
+.chat-input::placeholder{color:#1A3A52;}
+.chat-send{
+  background:transparent;border:none;border-left:1px solid #0D2035;
+  padding:10px 16px;cursor:pointer;
+  color:#1A4A6A;font-size:11px;
+  font-family:'Orbitron',sans-serif;font-weight:700;
+  letter-spacing:2px;transition:color .2s,background .2s;
+}
+.chat-send:hover{color:#00B4FF;background:rgba(0,100,180,.1);}
+@media(max-width:700px){.chat-messages{height:160px;}.chat-bubble{font-size:11px;}}
+
+/* DEV BAR — fixed above bottom tape */
+#devBar{
+  position:fixed;
+  bottom:36px;
+  left:0;right:0;
+  z-index:201;
+  height:32px;
+  background:rgba(5,10,18,.92);
+  border-top:1px solid #0D1E2E;
+  display:flex;align-items:center;
+  padding:0 20px;
+  gap:10px;
+  pointer-events:none;
+  backdrop-filter:blur(6px);
+}
+#devBar a{
+  pointer-events:all;
+  display:flex;align-items:center;gap:8px;
+  text-decoration:none;
+  color:#3A6A8A;
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;letter-spacing:1.5px;
+  transition:color .2s;
+}
+#devBar a:hover{color:#00B4FF;}
+#devBar a svg{flex-shrink:0;opacity:.75;transition:opacity .2s;}
+#devBar a:hover svg{opacity:1;}
+</style>
+</head>
+<body>
+<div id="starfield"></div>
+<div class="force-particles" id="forceParticles"></div>
+<div id="shipLayer"></div>
+<div class="tape top"><span class="tape-text">⚠ ZONA DE CONSTRUCCIÓN · OBRA EN PROGRESO · ACCESO RESTRINGIDO · THE FORCE IS BUILDING · ⚠</span></div>
+<div class="tape bottom"><span class="tape-text">⚠ CONSTRUCTION ZONE · MINIONS AT WORK · LEGO ENGINEERS ON DUTY · SISTEMA EN LÍNEA · ⚠</span></div>
+<div id="charLayer"></div>
+
+<div class="container">
+  <div class="brand-tape"><span class="brand-text">PRINTSNCODE</span></div>
+  <div class="title-block">
+    <div class="title-main" id="mainTitle">EN CONSTRUCCIÓN</div>
+    <div class="title-sub" id="mainSub">▶ SISTEMA OPERATIVO · CARGANDO REALIDAD ◀</div>
+  </div>
+
+  <!-- LIGHTSABER PROGRESS BARS -->
+  <div class="progress-panel">
+    <div class="prog-row saber-row saber-orange" id="sr1">
+      <div class="prog-label"><span>ESTRUCTURA PRINCIPAL ///</span><span class="prog-pct" id="pp1">78%</span></div>
+      <div class="saber-track"><div class="saber-hilt"></div><div class="saber-blade" id="pf1" style="width:78%"></div><div class="saber-tip" id="st1"></div></div>
+    </div>
+    <div class="prog-row saber-row saber-red" id="sr2">
+      <div class="prog-label"><span>MÓDULO FUERZA JEDI ///</span><span class="prog-pct" id="pp2">61%</span></div>
+      <div class="saber-track"><div class="saber-hilt"></div><div class="saber-blade" id="pf2" style="width:61%"></div><div class="saber-tip" id="st2"></div></div>
+    </div>
+    <div class="prog-row saber-row saber-blue" id="sr3">
+      <div class="prog-label"><span>PROTOCOLO MINION ///</span><span class="prog-pct" id="pp3">90%</span></div>
+      <div class="saber-track"><div class="saber-hilt"></div><div class="saber-blade" id="pf3" style="width:90%"></div><div class="saber-tip" id="st3"></div></div>
+    </div>
+    <div class="prog-row saber-row saber-green" id="sr4">
+      <div class="prog-label"><span>INGENIERÍA LEGO ///</span><span class="prog-pct" id="pp4">45%</span></div>
+      <div class="saber-track"><div class="saber-hilt"></div><div class="saber-blade" id="pf4" style="width:45%"></div><div class="saber-tip" id="st4"></div></div>
+    </div>
+    <div class="prog-row saber-row saber-purple" id="sr5">
+      <div class="prog-label"><span>MÓDULO MACE WINDU ///</span><span class="prog-pct" id="pp5">33%</span></div>
+      <div class="saber-track"><div class="saber-hilt"></div><div class="saber-blade" id="pf5" style="width:33%"></div><div class="saber-tip" id="st5"></div></div>
+    </div>
+  </div>
+
+  <!-- RETRO SHOOTER GAME -->
+  <div id="gameWidget">
+    <div id="gameStats">SCORE: <span id="gScore">0</span> &nbsp; WAVE: <span id="gWave">1</span></div>
+    <div id="gameLives">❤️ <span id="gLives">3</span></div>
+    <canvas id="gameCanvas" width="920" height="220"></canvas>
+    <div id="gameOverlay">
+      <div class="g-title">GALACTIC DEFENDER</div>
+      <div class="g-sub">SPACE · CLICK · TOCA PARA EMPEZAR</div>
+      <div class="g-score" id="gFinalScore"></div>
+    </div>
+  </div>
+
+  <div class="hud-row">
+    <div class="hud-panel glow" data-label="[ TIEMPO ]"><div class="hud-stat">Tiempo en obra</div><div class="hud-val amber" id="clock">00:00:00</div></div>
+    <div class="hud-panel" data-label="[ RECURSOS ]"><div class="hud-stat">Ladrillos LEGO usados</div><div class="hud-val cyan" id="bricks">14.820</div></div>
+    <div class="hud-panel" id="forcePanel" data-label="[ FUERZA ]"><div class="hud-stat">Nivel de La Fuerza</div><div class="hud-val green" id="forceVal">72.3%</div></div>
+    <div class="hud-panel" data-label="[ MINIONS ]"><div class="hud-stat">Minions en turno</div><div class="hud-val amber" id="minionCount">247</div></div>
+  </div>
+  <div class="terminal" id="terminal">
+    <div class="log-line info">&gt; BOOT :: Iniciando sistema v4.3 — SABLES + NAVES + JUEGO ACTIVADOS...</div>
+    <div id="logLines"></div>
+    <div>&gt; <span class="log-cursor"></span></div>
+  </div>
+
+  <!-- CHAT WIDGET -->
+  <div class="chat-widget">
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot lego">
+        <span class="chat-sender">LEGO OBRERO</span>
+        <div class="chat-bubble">¡Bienvenido a la obra! Estamos construyendo algo épico. Puedes escribirme aquí. 🧱</div>
+      </div>
+    </div>
+    <div class="chat-typing" id="chatTyping"></div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Escribe un mensaje a los trabajadores..." maxlength="120" autocomplete="off"/>
+      <button class="chat-send" id="chatSend">ENVIAR</button>
+    </div>
+  </div>
+  <div class="footer" id="footer">⚡ OBRA EN PROGRESO · ESTIMADO DE LANZAMIENTO: MUY PRONTO · POWERED BY LA FUERZA ⚡</div>
+</div>
+
+
+
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SABER COLORS init — add CSS classes dynamically
+// ═══════════════════════════════════════════════════════
+// orange saber custom (not in CSS, inject)
+const saberOrangeStyle = document.createElement('style');
+saberOrangeStyle.textContent=`.saber-orange .saber-blade{background:linear-gradient(90deg,#550000,#FF6600,#FFAA44);box-shadow:0 0 8px #FF6600,0 0 18px #FF440088,0 0 35px #FF220044}.saber-orange .saber-tip{background:#FF6600;box-shadow:0 0 10px #FF6600,0 0 22px #FF440099}.saber-orange .prog-pct{color:#FF9944}`;
+document.head.appendChild(saberOrangeStyle);
+
+// Tip position synced with blade width
+function syncTips(){
+  ['1','2','3','4','5'].forEach(i=>{
+    const blade=document.getElementById('pf'+i);
+    const tip=document.getElementById('st'+i);
+    if(blade&&tip) tip.style.left=`calc(${blade.style.width} - 6px)`;
+  });
+}
+syncTips();
+
+// ═══════════════════════════════════════════════════════
+//  STAR WARS BACKGROUND SHIPS — SVG drawn, roam slowly
+// ═══════════════════════════════════════════════════════
+const shipLayer = document.getElementById('shipLayer');
+
+// SVG ship definitions
+function xwing(w=120){
+  const h=Math.round(w*.5);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg" opacity=".18">
+    <!-- fuselage -->
+    <rect x="20" y="26" width="80" height="8" rx="4" fill="#889AAA"/>
+    <rect x="20" y="26" width="80" height="8" rx="4" fill="rgba(255,255,255,.12)"/>
+    <!-- nose cone -->
+    <polygon points="100,30 120,28 120,32" fill="#99AABB"/>
+    <!-- cockpit -->
+    <ellipse cx="70" cy="27" rx="8" ry="5" fill="#2244AA" opacity=".8"/>
+    <ellipse cx="70" cy="27" rx="8" ry="5" fill="rgba(100,200,255,.3)"/>
+    <!-- engines -->
+    <rect x="18" y="28" width="10" height="4" rx="2" fill="#CC4400"/>
+    <!-- upper wings -->
+    <polygon points="30,30 10,5 50,25" fill="#778899"/>
+    <polygon points="30,30 10,5 50,25" fill="rgba(255,255,255,.08)"/>
+    <polygon points="70,30 55,5 80,24" fill="#778899"/>
+    <!-- lower wings -->
+    <polygon points="30,30 10,55 50,35" fill="#778899"/>
+    <polygon points="70,30 55,55 80,36" fill="#778899"/>
+    <!-- wing detail lines -->
+    <line x1="10" y1="5" x2="50" y2="25" stroke="#556677" stroke-width=".8"/>
+    <line x1="10" y1="55" x2="50" y2="35" stroke="#556677" stroke-width=".8"/>
+    <!-- engine glow -->
+    <circle cx="18" cy="30" r="4" fill="#FF8844" opacity=".7"/>
+    <circle cx="18" cy="30" r="2" fill="#FFCC88"/>
+    <!-- laser tips -->
+    <rect x="8" y="3" width="3" height="3" rx="1" fill="#CC3300"/>
+    <rect x="8" y="54" width="3" height="3" rx="1" fill="#CC3300"/>
+    <rect x="53" y="3" width="3" height="3" rx="1" fill="#CC3300"/>
+    <rect x="53" y="54" width="3" height="3" rx="1" fill="#CC3300"/>
+  </svg>`;
+}
+
+function tiefighter(w=80){
+  const h=w;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" opacity=".16">
+    <!-- left panel -->
+    <rect x="0" y="8" width="22" height="64" rx="3" fill="#1A1A2A" stroke="#334" stroke-width="1"/>
+    <rect x="2" y="10" width="18" height="60" rx="2" fill="#222233"/>
+    <!-- panel grid lines -->
+    <line x1="0" y1="20" x2="22" y2="20" stroke="#334" stroke-width=".6"/>
+    <line x1="0" y1="33" x2="22" y2="33" stroke="#334" stroke-width=".6"/>
+    <line x1="0" y1="47" x2="22" y2="47" stroke="#334" stroke-width=".6"/>
+    <line x1="0" y1="60" x2="22" y2="60" stroke="#334" stroke-width=".6"/>
+    <line x1="7" y1="8" x2="7" y2="72" stroke="#334" stroke-width=".6"/>
+    <line x1="14" y1="8" x2="14" y2="72" stroke="#334" stroke-width=".6"/>
+    <!-- right panel -->
+    <rect x="58" y="8" width="22" height="64" rx="3" fill="#1A1A2A" stroke="#334" stroke-width="1"/>
+    <rect x="60" y="10" width="18" height="60" rx="2" fill="#222233"/>
+    <line x1="58" y1="20" x2="80" y2="20" stroke="#334" stroke-width=".6"/>
+    <line x1="58" y1="33" x2="80" y2="33" stroke="#334" stroke-width=".6"/>
+    <line x1="58" y1="47" x2="80" y2="47" stroke="#334" stroke-width=".6"/>
+    <line x1="58" y1="60" x2="80" y2="60" stroke="#334" stroke-width=".6"/>
+    <line x1="65" y1="8" x2="65" y2="72" stroke="#334" stroke-width=".6"/>
+    <line x1="73" y1="8" x2="73" y2="72" stroke="#334" stroke-width=".6"/>
+    <!-- struts -->
+    <rect x="21" y="34" width="8" height="12" rx="1" fill="#334455"/>
+    <rect x="51" y="34" width="8" height="12" rx="1" fill="#334455"/>
+    <!-- cockpit sphere -->
+    <circle cx="40" cy="40" r="14" fill="#111122" stroke="#445566" stroke-width="1.2"/>
+    <circle cx="40" cy="40" r="14" fill="rgba(255,255,255,.04)"/>
+    <!-- cockpit window hex -->
+    <polygon points="40,29 48,33 48,47 40,51 32,47 32,33" fill="#0A1A2A" stroke="#223344" stroke-width=".8"/>
+    <polygon points="40,31 46,34 46,46 40,49 34,46 34,34" fill="#0D2035" opacity=".8"/>
+    <!-- viewport glow -->
+    <ellipse cx="38" cy="37" rx="4" ry="5" fill="rgba(100,180,255,.15)"/>
+    <!-- engine glow center -->
+    <circle cx="40" cy="40" r="3" fill="#FF6600" opacity=".4"/>
+  </svg>`;
+}
+
+function millenniumFalcon(w=160){
+  const h=Math.round(w*.65);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 160 104" xmlns="http://www.w3.org/2000/svg" opacity=".15">
+    <!-- main saucer hull -->
+    <ellipse cx="72" cy="52" rx="62" ry="44" fill="#7A8A7A" stroke="#556655" stroke-width="1"/>
+    <ellipse cx="72" cy="52" rx="62" ry="44" fill="rgba(255,255,255,.05)"/>
+    <!-- mandibles -->
+    <rect x="120" y="38" width="38" height="12" rx="6" fill="#6A7A6A" stroke="#445544" stroke-width=".8"/>
+    <rect x="120" y="54" width="38" height="12" rx="6" fill="#6A7A6A" stroke="#445544" stroke-width=".8"/>
+    <!-- cockpit dome -->
+    <ellipse cx="72" cy="44" rx="14" ry="10" fill="#556655"/>
+    <ellipse cx="72" cy="44" rx="10" ry="7" fill="#0A1A0A" stroke="#334433" stroke-width=".8"/>
+    <ellipse cx="71" cy="42" rx="5" ry="4" fill="rgba(100,200,255,.2)"/>
+    <!-- hull detail circles -->
+    <circle cx="50" cy="52" r="10" fill="none" stroke="#556655" stroke-width="1.2"/>
+    <circle cx="50" cy="52" r="6" fill="none" stroke="#445544" stroke-width=".8"/>
+    <circle cx="94" cy="62" r="8" fill="none" stroke="#556655" stroke-width="1"/>
+    <!-- engine block -->
+    <rect x="8" y="44" width="18" height="16" rx="4" fill="#445544" stroke="#334433" stroke-width=".8"/>
+    <circle cx="12" cy="52" r="3" fill="#FF8844" opacity=".8"/>
+    <circle cx="12" cy="52" r="1.5" fill="#FFCC88"/>
+    <circle cx="20" cy="52" r="3" fill="#FF8844" opacity=".7"/>
+    <circle cx="20" cy="52" r="1.5" fill="#FFCC88"/>
+    <!-- top gun turret -->
+    <circle cx="72" cy="26" r="5" fill="#556655" stroke="#334433" stroke-width=".8"/>
+    <rect x="70" y="18" width="4" height="10" rx="1" fill="#445544"/>
+    <!-- bottom detail lines -->
+    <line x1="30" y1="68" x2="110" y2="68" stroke="#556655" stroke-width=".6"/>
+    <line x1="20" y1="60" x2="120" y2="60" stroke="#445544" stroke-width=".5"/>
+  </svg>`;
+}
+
+function starDestroyer(w=200){
+  const h=Math.round(w*.45);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg" opacity=".12">
+    <!-- main wedge hull -->
+    <polygon points="200,45 0,5 0,85" fill="#2A2A3A" stroke="#3A3A4A" stroke-width="1"/>
+    <polygon points="200,45 0,5 0,85" fill="rgba(255,255,255,.04)"/>
+    <!-- hull panels -->
+    <line x1="0" y1="25" x2="200" y2="44" stroke="#333344" stroke-width=".7"/>
+    <line x1="0" y1="45" x2="200" y2="45" stroke="#333344" stroke-width=".7"/>
+    <line x1="0" y1="65" x2="200" y2="46" stroke="#333344" stroke-width=".7"/>
+    <line x1="50" y1="6" x2="50" y2="84" stroke="#333344" stroke-width=".5"/>
+    <line x1="100" y1="8" x2="100" y2="82" stroke="#333344" stroke-width=".5"/>
+    <line x1="150" y1="12" x2="150" y2="78" stroke="#333344" stroke-width=".5"/>
+    <!-- bridge tower -->
+    <rect x="155" y="28" width="22" height="34" rx="2" fill="#222232" stroke="#334" stroke-width=".8"/>
+    <rect x="160" y="32" width="12" height="10" rx="1" fill="#0A1A2A" stroke="#223344" stroke-width=".6"/>
+    <ellipse cx="164" cy="35" rx="4" ry="3" fill="rgba(100,180,255,.15)"/>
+    <!-- engine glow -->
+    <circle cx="5" cy="20" r="5" fill="#4444CC" opacity=".6"/>
+    <circle cx="5" cy="20" r="2.5" fill="#8888FF"/>
+    <circle cx="5" cy="45" r="5" fill="#4444CC" opacity=".6"/>
+    <circle cx="5" cy="45" r="2.5" fill="#8888FF"/>
+    <circle cx="5" cy="70" r="5" fill="#4444CC" opacity=".6"/>
+    <circle cx="5" cy="70" r="2.5" fill="#8888FF"/>
+  </svg>`;
+}
+
+// Ship pool — type, SVG fn, size, speed range
+const SHIP_TYPES = [
+  {fn:xwing,        w:110, speedMin:.12, speedMax:.28, friendly:true},
+  {fn:xwing,        w:80,  speedMin:.18, speedMax:.38, friendly:true},
+  {fn:tiefighter,   w:70,  speedMin:.2,  speedMax:.45, friendly:false},
+  {fn:tiefighter,   w:55,  speedMin:.25, speedMax:.5,  friendly:false},
+  {fn:millenniumFalcon, w:150, speedMin:.08, speedMax:.18, friendly:true},
+  {fn:starDestroyer, w:180, speedMin:.04, speedMax:.1, friendly:false},
+];
+
+const activeShips=[];
+function spawnShip(){
+  if(activeShips.length>=7) return;
+  const def=SHIP_TYPES[Math.floor(Math.random()*SHIP_TYPES.length)];
+  const wrap=document.createElement('div');
+  wrap.className='ship-wrap';
+  const fromRight=Math.random()<.5;
+  const speed=def.speedMin+Math.random()*(def.speedMax-def.speedMin);
+  const y=40+Math.random()*(window.innerHeight-120);
+  // slight vertical drift
+  const vy=(Math.random()-.5)*0.06;
+  const svg=def.fn(def.w);
+  wrap.innerHTML=svg;
+  wrap.style.position='absolute';
+  if(fromRight){
+    wrap.style.right='-220px';
+    wrap.style.transform='scaleX(-1)';
+    wrap.style.top=y+'px';
+  } else {
+    wrap.style.left='-220px';
+    wrap.style.top=y+'px';
+  }
+  shipLayer.appendChild(wrap);
+  const obj={wrap,x:fromRight?window.innerWidth+220:-220,y,vx:fromRight?-speed:speed,vy,def,fromRight};
+  activeShips.push(obj);
+}
+
+function updateShips(dt){
+  for(let i=activeShips.length-1;i>=0;i--){
+    const s=activeShips[i];
+    s.x+=s.vx*dt;
+    s.y+=s.vy*dt;
+    s.wrap.style.left=s.x+'px';
+    s.wrap.style.top=s.y+'px';
+    // remove if off screen
+    if(s.fromRight && s.x < -250){ s.wrap.remove(); activeShips.splice(i,1); }
+    else if(!s.fromRight && s.x > window.innerWidth+250){ s.wrap.remove(); activeShips.splice(i,1); }
+  }
+}
+setInterval(spawnShip, 4500);
+setTimeout(spawnShip,800);
+setTimeout(spawnShip,2200);
+
+// ═══════════════════════════════════════════════════════
+//  RETRO SHOOTER GAME
+// ═══════════════════════════════════════════════════════
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const overlay=document.getElementById('gameOverlay');
+let gameActive=false, gameScore=0, gameLives=3, gameWave=1;
+let player={x:60,y:110,w:32,h:20};
+let bullets=[], enemies=[], particles=[], stars2=[];
+let gameKeys={up:false,down:false,fire:false};
+let lastShot=0, enemySpawnT=0, frameT=0, waveKills=0;
+
+// init mini-starfield for game canvas
+for(let i=0;i<60;i++) stars2.push({x:Math.random()*920,y:Math.random()*220,s:Math.random()*1.5+.3,sp:Math.random()*.4+.1});
+
+function startGame(){
+  gameActive=true; gameScore=0; gameLives=3; gameWave=1; waveKills=0;
+  bullets=[]; enemies=[]; particles=[];
+  player.x=60; player.y=110;
+  overlay.style.display='none';
+  document.getElementById('gScore').textContent='0';
+  document.getElementById('gWave').textContent='1';
+  document.getElementById('gLives').textContent='3';
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  gameActive=false;
+  overlay.style.display='flex';
+  document.querySelector('#gameOverlay .g-title').textContent='GAME OVER';
+  document.querySelector('#gameOverlay .g-sub').textContent='SPACE · CLICK · TOCA PARA REINTENTAR';
+  document.getElementById('gFinalScore').textContent='SCORE: '+gameScore;
+  addLog('err',`> GAME :: GAME OVER — Score final: ${gameScore} pts. Wave ${gameWave}.`);
+}
+
+// Pixel-art player ship (X-Wing style)
+function drawPlayer(x,y){
+  ctx.save();
+  // fuselage
+  ctx.fillStyle='#AABBCC';
+  ctx.fillRect(x,y+8,28,6);
+  // nose
+  ctx.fillStyle='#CCDDEE';
+  ctx.beginPath();ctx.moveTo(x+28,y+11);ctx.lineTo(x+34,y+9);ctx.lineTo(x+34,y+13);ctx.closePath();ctx.fill();
+  // cockpit
+  ctx.fillStyle='#2255AA';
+  ctx.fillRect(x+18,y+6,8,4);
+  ctx.fillStyle='rgba(100,200,255,.5)';
+  ctx.fillRect(x+19,y+7,6,2);
+  // upper wing
+  ctx.fillStyle='#889AAA';
+  ctx.beginPath();ctx.moveTo(x+8,y+8);ctx.lineTo(x+2,y+2);ctx.lineTo(x+18,y+8);ctx.closePath();ctx.fill();
+  // lower wing
+  ctx.fillStyle='#889AAA';
+  ctx.beginPath();ctx.moveTo(x+8,y+14);ctx.lineTo(x+2,y+20);ctx.lineTo(x+18,y+14);ctx.closePath();ctx.fill();
+  // engine
+  ctx.fillStyle='#FF8844';
+  ctx.fillRect(x,y+9,5,4);
+  ctx.fillStyle='#FFCC88';
+  ctx.fillRect(x,y+10,3,2);
+  ctx.restore();
+}
+
+// Pixel TIE Fighter
+function drawTIE(x,y,w=28,h=28){
+  ctx.save();
+  ctx.translate(x,y);
+  const cx=w/2,cy=h/2;
+  // panels
+  ctx.fillStyle='#1A1A2A';ctx.strokeStyle='#334';ctx.lineWidth=.7;
+  ctx.fillRect(0,4,8,h-8);ctx.strokeRect(0,4,8,h-8);
+  ctx.fillRect(w-8,4,8,h-8);ctx.strokeRect(w-8,4,8,h-8);
+  // struts
+  ctx.fillStyle='#334';ctx.fillRect(8,cy-3,5,6);ctx.fillRect(w-13,cy-3,5,6);
+  // cockpit
+  ctx.fillStyle='#0A1020';ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#445';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#0D2030';ctx.beginPath();
+  // hex window
+  const pts=6;
+  ctx.beginPath();
+  for(let i=0;i<pts;i++){const a=i*Math.PI*2/pts-Math.PI/2;ctx.lineTo(cx+6*Math.cos(a),cy+6*Math.sin(a));}
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(100,180,255,.15)';ctx.fillRect(cx-3,cy-4,5,6);
+  ctx.restore();
+}
+
+// Pixel asteroid
+function drawAsteroid(x,y,r){
+  ctx.save();ctx.fillStyle='#444455';ctx.strokeStyle='#556';ctx.lineWidth=1;
+  ctx.beginPath();
+  const pts=7;
+  for(let i=0;i<pts;i++){const a=i*Math.PI*2/pts;const rr=r*(0.7+Math.sin(i*2.4+r)*.3);ctx.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.06)';ctx.beginPath();ctx.arc(x-r*.2,y-r*.2,r*.3,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function spawnEnemyWave(){
+  const cols=3+Math.min(gameWave,5);
+  const rows=2+Math.min(gameWave-1,3);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const type=Math.random()<.7?'tie':'asteroid';
+      enemies.push({
+        x:canW()*.5+c*45+Math.random()*10,
+        y:20+r*34+Math.random()*8,
+        vx:(.12+gameWave*.04)*(Math.random()<.5?-1:1),
+        vy:.05+Math.random()*.05,
+        type,
+        hp:type==='tie'?1:2,
+        r:type==='asteroid'?10+Math.random()*6:0,
+        phase:Math.random()*Math.PI*2,
+      });
+    }
+  }
+}
+
+function canW(){ return canvas.width; }
+function canH(){ return canvas.height; }
+
+let autoFireT=0;
+function gameLoop(ts){
+  if(!gameActive) return;
+  const dt=Math.min(ts-frameT,40);frameT=ts;
+
+  // ── UPDATE ──
+  // scroll stars
+  stars2.forEach(s=>{s.x-=s.sp*(dt/16);if(s.x<0)s.x=canW();});
+
+  // player movement — keyboard + auto via up/down
+  if(gameKeys.up && player.y>4) player.y-=2.8*(dt/16);
+  if(gameKeys.down && player.y<canH()-player.h-4) player.y+=2.8*(dt/16);
+
+  // auto-fire
+  autoFireT+=dt;
+  if(autoFireT>220){
+    autoFireT=0;
+    bullets.push({x:player.x+34,y:player.y+10,vx:7,friendly:true,w:10,h:2});
+  }
+
+  // bullets
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    b.x+=b.vx*(dt/16);
+    if(b.x>canW()+20||b.x<-20){bullets.splice(i,1);continue;}
+    // enemy bullets hit player
+    if(!b.friendly){
+      if(b.x<player.x+player.w&&b.x+b.w>player.x&&b.y<player.y+player.h&&b.y+2>player.y){
+        bullets.splice(i,1); hitPlayer(); continue;
+      }
+    }
+  }
+
+  // enemies
+  if(enemies.length===0){ gameWave++; waveKills=0; spawnEnemyWave(); document.getElementById('gWave').textContent=gameWave; }
+  enemySpawnT+=dt;
+
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    e.phase+=dt*.001;
+    e.x+=e.vx*(dt/16);
+    e.y+=Math.sin(e.phase)*0.5*(dt/16);
+    // bounce walls
+    if(e.x<100||e.x>canW()-50) e.vx*=-1;
+    if(e.y<10) e.vy=Math.abs(e.vy);
+    if(e.y>canH()-40) e.vy=-Math.abs(e.vy);
+    e.y+=e.vy*(dt/16);
+
+    // enemy shoots occasionally
+    if(Math.random()<.0004*dt){
+      bullets.push({x:e.x-10,y:e.y+10,vx:-4-gameWave*.2,friendly:false,w:6,h:2,enemy:true});
+    }
+
+    // hit by player bullet?
+    for(let j=bullets.length-1;j>=0;j--){
+      const b=bullets[j];
+      if(!b.friendly) continue;
+      const ew=e.type==='tie'?28:e.r*2, eh=e.type==='tie'?28:e.r*2;
+      const ex=e.type==='tie'?e.x-14:e.x-e.r, ey=e.type==='tie'?e.y-14:e.y-e.r;
+      if(b.x<ex+ew&&b.x+b.w>ex&&b.y<ey+eh&&b.y+b.h>ey){
+        bullets.splice(j,1);
+        e.hp--;
+        spawnParticles(e.x,e.y,e.type==='tie'?'#4466FF':'#888866',6);
+        if(e.hp<=0){
+          spawnParticles(e.x,e.y,e.type==='tie'?'#2244FF':'#AAAA66',14);
+          enemies.splice(i,1);
+          gameScore+=e.type==='tie'?100:50;
+          document.getElementById('gScore').textContent=gameScore;
+          addLog('info',`> GAME :: +${e.type==='tie'?100:50} pts — ${e.type==='tie'?'TIE destruido':'Asteroide pulverizado'}`);
+        }
+        break;
+      }
+    }
+
+    // player collision
+    if(e.type==='tie'){
+      if(Math.abs(e.x-player.x-16)<24&&Math.abs(e.y-player.y-10)<20){hitPlayer();enemies.splice(i,1);}
+    }
+  }
+
+  // particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx*(dt/16);p.y+=p.vy*(dt/16);p.life-=dt;p.vx*=.95;p.vy*=.95;
+    if(p.life<=0)particles.splice(i,1);
+  }
+
+  // ── DRAW ──
+  ctx.clearRect(0,0,canW(),canH());
+  // bg
+  ctx.fillStyle='#020A14';ctx.fillRect(0,0,canW(),canH());
+  // stars
+  stars2.forEach(s=>{ctx.fillStyle=`rgba(255,255,255,${.3+s.s*.3})`;ctx.fillRect(s.x,s.y,s.s,s.s);});
+  // nebula hint
+  const ng=ctx.createRadialGradient(canW()*.7,canH()*.3,10,canW()*.7,canH()*.3,200);
+  ng.addColorStop(0,'rgba(80,20,120,.08)');ng.addColorStop(1,'transparent');
+  ctx.fillStyle=ng;ctx.fillRect(0,0,canW(),canH());
+
+  // enemies
+  enemies.forEach(e=>{
+    if(e.type==='tie') drawTIE(e.x-14,e.y-14);
+    else drawAsteroid(e.x,e.y,e.r);
+  });
+
+  // bullets
+  bullets.forEach(b=>{
+    if(b.friendly){
+      // green laser bolt
+      const lg=ctx.createLinearGradient(b.x,b.y,b.x+b.w,b.y);
+      lg.addColorStop(0,'transparent');lg.addColorStop(.3,'#00FF88');lg.addColorStop(1,'#CCFFEE');
+      ctx.fillStyle=lg;ctx.fillRect(b.x,b.y-1,b.w,b.h+2);
+      ctx.fillStyle='rgba(0,255,100,.3)';ctx.fillRect(b.x,b.y-3,b.w+4,b.h+6);
+    } else {
+      // red enemy bolt
+      const rl=ctx.createLinearGradient(b.x,0,b.x+b.w,0);
+      rl.addColorStop(0,'#FF2200');rl.addColorStop(1,'transparent');
+      ctx.fillStyle=rl;ctx.fillRect(b.x,b.y-1,b.w,b.h+2);
+      ctx.fillStyle='rgba(255,50,0,.3)';ctx.fillRect(b.x-2,b.y-3,b.w+4,b.h+6);
+    }
+  });
+
+  // particles
+  particles.forEach(p=>{
+    const a=p.life/p.maxLife;
+    ctx.fillStyle=p.color;ctx.globalAlpha=a*.9;
+    ctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s);
+  });
+  ctx.globalAlpha=1;
+
+  // player ship
+  drawPlayer(player.x,player.y);
+
+  // player shield flash
+  if(playerFlash>0){
+    playerFlash-=dt;
+    ctx.fillStyle=`rgba(255,0,0,${playerFlash/200*.4})`;
+    ctx.fillRect(0,0,canW(),canH());
+  }
+
+  // HUD lives hearts
+  for(let i=0;i<gameLives;i++){
+    ctx.font='12px serif';ctx.fillText('❤',canW()-18-i*16,16);
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+let playerFlash=0;
+function hitPlayer(){
+  gameLives--;playerFlash=200;
+  document.getElementById('gLives').textContent=Math.max(0,gameLives);
+  addLog('warn',`> GAME :: ¡IMPACTO! Vidas restantes: ${gameLives}`);
+  if(gameLives<=0) endGame();
+}
+
+function spawnParticles(x,y,color,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,spd=.5+Math.random()*2.5;
+    particles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,s:2+Math.random()*3,color,life:300+Math.random()*300,maxLife:600});
+  }
+}
+
+// controls
+document.addEventListener('keydown',e=>{
+  const chatFocused = document.activeElement === document.getElementById('chatInput');
+  if(chatFocused) return;
+  if(e.code==='Space'){ e.preventDefault(); if(!gameActive){startGame();}gameKeys.fire=true; }
+  if(e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();gameKeys.up=true;}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){e.preventDefault();gameKeys.down=true;}
+});
+document.addEventListener('keyup',e=>{
+  if(e.code==='Space') gameKeys.fire=false;
+  if(e.code==='ArrowUp'||e.code==='KeyW') gameKeys.up=false;
+  if(e.code==='ArrowDown'||e.code==='KeyS') gameKeys.down=false;
+});
+// touch / click
+overlay.addEventListener('click',startGame);
+canvas.addEventListener('click',()=>{if(!gameActive)startGame();});
+let touchY=null;
+canvas.addEventListener('touchstart',e=>{e.preventDefault();touchY=e.touches[0].clientY;if(!gameActive)startGame();},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const dy=e.touches[0].clientY-touchY;touchY=e.touches[0].clientY;
+  player.y=Math.max(4,Math.min(canH()-player.h-4,player.y+dy*.6));
+},{passive:false});
+// mouse move on canvas
+canvas.addEventListener('mousemove',e=>{
+  if(!gameActive)return;
+  const rect=canvas.getBoundingClientRect();
+  const scaleY=canH()/rect.height;
+  const my=(e.clientY-rect.top)*scaleY;
+  player.y=Math.max(4,Math.min(canH()-player.h-4,my-player.h/2));
+});
+
+// spawn first wave
+spawnEnemyWave();
+
+// ═══════════════════════════════════════════════════════
+//  LEGO SVG CHARACTER FACTORY (same as before)
+// ═══════════════════════════════════════════════════════
+const D=`<defs>
+<linearGradient id="g_skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#D4970A"/></linearGradient>
+<linearGradient id="g_orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#B84400"/></linearGradient>
+<linearGradient id="g_cyan" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22CCFF"/><stop offset="100%" stop-color="#006699"/></linearGradient>
+<linearGradient id="g_blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4488EE"/><stop offset="100%" stop-color="#112299"/></linearGradient>
+<linearGradient id="g_navy" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2244AA"/><stop offset="100%" stop-color="#0A1155"/></linearGradient>
+<linearGradient id="g_dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#333"/><stop offset="100%" stop-color="#111"/></linearGradient>
+<linearGradient id="g_blk" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#222"/><stop offset="100%" stop-color="#050505"/></linearGradient>
+<linearGradient id="g_yellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE040"/><stop offset="100%" stop-color="#CC8800"/></linearGradient>
+<linearGradient id="g_white" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F8F8F8"/><stop offset="100%" stop-color="#CCCCCC"/></linearGradient>
+<linearGradient id="g_red" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF3322"/><stop offset="100%" stop-color="#880000"/></linearGradient>
+<linearGradient id="g_saber" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#660000"/><stop offset="60%" stop-color="#FF2200"/><stop offset="100%" stop-color="#FF7766"/></linearGradient>
+<linearGradient id="g_r2w" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8F4FF"/><stop offset="100%" stop-color="#9BB8CC"/></linearGradient>
+<linearGradient id="g_r2b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3377CC"/><stop offset="100%" stop-color="#0A2266"/></linearGradient>
+<linearGradient id="g_sheen" x1="0" y1="0" x2=".6" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,.38)"/><stop offset="45%" stop-color="rgba(255,255,255,.06)"/><stop offset="100%" stop-color="rgba(0,0,0,.14)"/></linearGradient>
+<filter id="f_glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="f_sabglow" x="-200%" y="-20%" width="500%" height="140%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>`;
+function pr(x,y,w,h,rx,grad,stroke='rgba(0,0,0,.55)',sw=1.2){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="url(#${grad})" stroke="${stroke}" stroke-width="${sw}"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="url(#g_sheen)" stroke="none"/>`;}
+function fl(x,y,w,h,rx){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="rgba(255,255,255,.28)" stroke="none"/>`;}
+function head(cx,top,hairColor,hatColor,hatLabel){
+  const hw=22,hh=20,hx=cx-hw/2;
+  let hat='',hair='';
+  if(hatColor){hat=`<ellipse cx="${cx}" cy="${top-6}" rx="5.5" ry="3.5" fill="${hatColor}" stroke="rgba(0,0,0,.5)" stroke-width=".8"/><rect x="${hx-1}" y="${top-4}" width="${hw+2}" height="${hh+1}" rx="5" fill="${hatColor}" stroke="${hatColor}" stroke-width=".5"/><rect x="${hx-1}" y="${top-4}" width="${hw+2}" height="${hh+1}" rx="5" fill="url(#g_sheen)"/>${hatLabel?`<text x="${cx}" y="${top+8}" text-anchor="middle" font-size="5.5" font-weight="900" font-family="Arial Black,sans-serif" fill="rgba(0,0,0,.65)">${hatLabel}</text>`:''}`;}
+  else if(hairColor){hair=`<rect x="${hx-2}" y="${top-5}" width="${hw+4}" height="11" rx="5" fill="${hairColor}" stroke="rgba(0,0,0,.5)" stroke-width=".8"/><rect x="${hx-2}" y="${top-5}" width="${hw+4}" height="11" rx="5" fill="url(#g_sheen)"/>`;}
+  const headBlock=pr(hx,top,hw,hh,4,'g_skin');
+  const ey=top+7;
+  const eyes=`<ellipse cx="${cx-5}" cy="${ey}" rx="3.5" ry="3.8" fill="#fff" stroke="rgba(0,0,0,.4)" stroke-width=".7"/><ellipse cx="${cx+5}" cy="${ey}" rx="3.5" ry="3.8" fill="#fff" stroke="rgba(0,0,0,.4)" stroke-width=".7"/><circle cx="${cx-4.8}" cy="${ey+.5}" r="2.1" fill="#1A1010"/><circle cx="${cx+5.2}" cy="${ey+.5}" r="2.1" fill="#1A1010"/><circle cx="${cx-3.8}" cy="${ey-.5}" r=".85" fill="rgba(255,255,255,.85)"/><circle cx="${cx+6.2}" cy="${ey-.5}" r=".85" fill="rgba(255,255,255,.85)"/>`;
+  const smile=`<path d="M${cx-4},${top+15} Q${cx},${top+19} ${cx+4},${top+15}" stroke="#333" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
+  const neck=pr(cx-4,top+hh,8,5,1.5,'g_skin');
+  return hat+hair+headBlock+eyes+smile+neck;
+}
+function svgWorker(){const cx=22,W=44,H=68,nb=38;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${D}<g id="al" style="transform-origin:${cx-9}px ${nb+3}px">${pr(cx-17,nb+1,10,18,3,'g_orange')}${pr(cx-17,nb+17,10,6,3,'g_skin')}</g><g id="ar" style="transform-origin:${cx+9}px ${nb+3}px">${pr(cx+7,nb+1,10,18,3,'g_orange')}${pr(cx+7,nb+17,10,6,3,'g_skin')}</g>${pr(cx-11,nb,22,20,2,'g_orange')}<text x="${cx}" y="${nb+13}" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.7)">🔨</text>${pr(cx-11,nb+20,22,6,1,'g_dark')}<g id="ll" style="transform-origin:${cx-5}px ${nb+26}px">${pr(cx-11,nb+26,10,18,2,'g_blue')}${pr(cx-13,nb+40,14,5,3,'g_blue')}</g><g id="lr" style="transform-origin:${cx+5}px ${nb+26}px">${pr(cx+1,nb+26,10,18,2,'g_blue')}${pr(cx-1,nb+40,14,5,3,'g_blue')}</g>${head(cx,10,null,'#FF8800','LEGO')}${fl(cx-8,12,10,5,3)}</svg>`;}
+function svgEngineer(){const cx=22,W=44,H=68,nb=38;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${D}<g id="al" style="transform-origin:${cx-9}px ${nb+3}px">${pr(cx-17,nb+1,10,18,3,'g_cyan')}${pr(cx-17,nb+17,10,6,3,'g_skin')}</g><g id="ar" style="transform-origin:${cx+9}px ${nb+3}px">${pr(cx+7,nb+1,10,18,3,'g_cyan')}${pr(cx+7,nb+17,10,6,3,'g_skin')}</g>${pr(cx-11,nb,22,20,2,'g_cyan')}<text x="${cx}" y="${nb+13}" text-anchor="middle" font-size="8" fill="rgba(0,0,0,.5)">📐</text>${pr(cx-11,nb+20,22,6,1,'g_dark')}<g id="ll" style="transform-origin:${cx-5}px ${nb+26}px">${pr(cx-11,nb+26,10,18,2,'g_dark')}${pr(cx-13,nb+40,14,5,3,'g_dark')}</g><g id="lr" style="transform-origin:${cx+5}px ${nb+26}px">${pr(cx+1,nb+26,10,18,2,'g_dark')}${pr(cx-1,nb+40,14,5,3,'g_dark')}</g>${head(cx,10,null,'#E0E0E0','ENG')}${fl(cx-8,12,10,5,3)}</svg>`;}
+function svgStuart(){const cx=22,W=44,H=76;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${D}<defs><linearGradient id="g_mbody" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE840"/><stop offset="100%" stop-color="#D4A000"/></linearGradient><linearGradient id="g_mov" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4488EE"/><stop offset="100%" stop-color="#1144AA"/></linearGradient><linearGradient id="g_glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#C8E8FF" stop-opacity=".96"/><stop offset="100%" stop-color="#88AACC" stop-opacity=".88"/></linearGradient></defs><rect x="18" y="1" width="3" height="9" rx="1.5" fill="#222" transform="rotate(-10,18,1)"/><rect x="21" y="0" width="3" height="11" rx="1.5" fill="#222"/><rect x="25" y="1" width="3" height="8" rx="1.5" fill="#222" transform="rotate(10,25,1)"/>${pr(cx-14,6,28,52,14,'g_mbody')}<rect x="${cx-15}" y="17" width="30" height="11" rx="3" fill="#555" stroke="rgba(0,0,0,.5)" stroke-width=".8"/><ellipse cx="${cx}" cy="22" rx="11" ry="8" fill="url(#g_glass)" stroke="#444" stroke-width="1.8"/><ellipse cx="${cx}" cy="22" rx="11" ry="8" fill="url(#g_sheen)" opacity=".35"/><circle cx="${cx}" cy="22" r="4.5" fill="#111" stroke="rgba(0,0,0,.5)" stroke-width=".5"/><circle cx="${cx+1.5}" cy="20.5" r="1.6" fill="rgba(255,255,255,.8)"/><path d="M${cx-5},38 Q${cx},44 ${cx+5},38" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="${cx-3}" y="38" width="4.5" height="5" rx="1" fill="#fff"/><rect x="${cx+1}" y="38" width="4.5" height="5" rx="1" fill="#fff"/>${pr(cx-14,43,28,17,14,'g_mov')}<rect x="${cx-14}" y="43" width="28" height="8" rx="0" fill="url(#g_mov)" stroke="none"/>${pr(cx-5,46,10,7,2,'g_mov','rgba(255,255,255,.3)',.7)}<g id="al" style="transform-origin:${cx-14}px 35px">${pr(cx-21,31,10,20,5,'g_mbody')}</g><g id="ar" style="transform-origin:${cx+14}px 35px">${pr(cx+11,31,10,20,5,'g_mbody')}</g><g id="ll" style="transform-origin:${cx-5}px 60px">${pr(cx-14,58,12,14,4,'g_mov')}${pr(cx-16,68,16,6,3,'g_blk')}</g><g id="lr" style="transform-origin:${cx+5}px 60px">${pr(cx+2,58,12,14,4,'g_mov')}${pr(cx,68,16,6,3,'g_blk')}</g>${fl(cx-7,8,10,18,7)}</svg>`;}
+function svgKevin(){const cx=22,W=44,H=88;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${D}<defs><linearGradient id="g_kb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFDA20"/><stop offset="100%" stop-color="#CC9000"/></linearGradient><linearGradient id="g_ko" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3355DD"/><stop offset="100%" stop-color="#0A1199"/></linearGradient><linearGradient id="g_kg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#C0DCF4" stop-opacity=".95"/><stop offset="100%" stop-color="#80A8C4" stop-opacity=".88"/></linearGradient></defs><rect x="20" y="-1" width="4" height="14" rx="2" fill="#111"/><rect x="16" y="1" width="3" height="10" rx="1.5" fill="#111" transform="rotate(-12,16,1)"/>${pr(cx-14,6,28,64,14,'g_kb')}<rect x="${cx-15}" y="16" width="30" height="13" rx="3" fill="#444" stroke="rgba(0,0,0,.5)" stroke-width=".8"/><ellipse cx="${cx-7}" cy="22" rx="8" ry="7" fill="url(#g_kg)" stroke="#333" stroke-width="1.6"/><circle cx="${cx-7}" cy="22" r="4" fill="#111"/><circle cx="${cx-5}" cy="20.5" r="1.5" fill="rgba(255,255,255,.8)"/><ellipse cx="${cx+7}" cy="22" rx="8" ry="7" fill="url(#g_kg)" stroke="#333" stroke-width="1.6"/><circle cx="${cx+7}" cy="22" r="4" fill="#111"/><circle cx="${cx+9}" cy="20.5" r="1.5" fill="rgba(255,255,255,.8)"/><rect x="${cx-1}" y="19" width="2" height="6" rx="1" fill="#333"/><path d="M${cx-5},46 Q${cx},52 ${cx+5},46" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="${cx-3}" y="46" width="5" height="5" rx="1" fill="#fff"/>${pr(cx-14,54,28,18,14,'g_ko')}<rect x="${cx-14}" y="54" width="28" height="8" rx="0" fill="url(#g_ko)" stroke="none"/>${pr(cx-5,57,10,7,2,'g_ko','rgba(255,255,255,.25)',.7)}<g id="al" style="transform-origin:${cx-14}px 42px">${pr(cx-22,37,11,22,5,'g_kb')}</g><g id="ar" style="transform-origin:${cx+14}px 42px">${pr(cx+11,37,11,22,5,'g_kb')}</g><g id="ll" style="transform-origin:${cx-5}px 72px">${pr(cx-13,70,12,14,4,'g_ko')}${pr(cx-15,80,16,6,3,'g_blk')}</g><g id="lr" style="transform-origin:${cx+5}px 72px">${pr(cx+1,70,12,14,4,'g_ko')}${pr(cx-1,80,16,6,3,'g_blk')}</g>${fl(cx-7,8,9,22,7)}</svg>`;}
+function svgVader(){const cx=24,W=52,H=76,nb=38;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${D}<defs><linearGradient id="g_vc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1A1A1A"/><stop offset="100%" stop-color="#050505"/></linearGradient><linearGradient id="g_vh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2C2C2C"/><stop offset="100%" stop-color="#0A0A0A"/></linearGradient></defs><path d="M10,${nb} L4,${H-2} L44,${H-2} L38,${nb} Z" fill="#0A0005" stroke="rgba(255,255,255,.04)" stroke-width=".6"/><g id="al" style="transform-origin:${cx-11}px ${nb+3}px">${pr(cx-20,nb,11,20,3,'g_vc','rgba(255,255,255,.05)',.8)}${pr(cx-20,nb+18,11,6,3,'g_blk','rgba(255,255,255,.04)',.6)}</g><g id="ar" style="transform-origin:${cx+11}px ${nb+3}px">${pr(cx+9,nb,11,20,3,'g_vc','rgba(255,255,255,.05)',.8)}${pr(cx+9,nb+18,11,6,3,'g_blk','rgba(255,255,255,.04)',.6)}<rect x="${cx+20}" y="${nb-14}" width="4" height="12" rx="1.5" fill="#666" stroke="#444" stroke-width=".6"/><rect x="${cx+21}" y="${nb-38}" width="2.5" height="26" rx="1" fill="url(#g_saber)" filter="url(#f_sabglow)" style="animation:saberPulse 1s ease-in-out infinite"/></g>${pr(cx-13,nb,26,22,2,'g_vc','rgba(255,255,255,.06)',.9)}<rect x="${cx-9}" y="${nb+4}" width="18" height="12" rx="1.5" fill="#0A0A0A" stroke="#1A1A1A" stroke-width=".6"/><circle cx="${cx-5}" cy="${nb+8}" r="2" fill="#CC0000"/><circle cx="${cx-5}" cy="${nb+8}" r=".9" fill="#FF5544"/><circle cx="${cx}" cy="${nb+8}" r="2" fill="#0066FF"/><circle cx="${cx}" cy="${nb+8}" r=".9" fill="#44AAFF"/><circle cx="${cx+5}" cy="${nb+8}" r="2" fill="#00AA44"/><circle cx="${cx+5}" cy="${nb+8}" r=".9" fill="#44FF88"/><circle cx="${cx-5}" cy="${nb+13}" r="2" fill="#FF8800"/><circle cx="${cx}" cy="${nb+13}" r="2" fill="#AA00CC"/><circle cx="${cx+5}" cy="${nb+13}" r="2" fill="#CC0000"/>${pr(cx-13,nb+22,26,6,1,'g_blk','rgba(255,255,255,.04)',.6)}<g id="ll" style="transform-origin:${cx-6}px ${nb+28}px">${pr(cx-13,nb+28,12,20,2,'g_vc','rgba(255,255,255,.04)',.6)}${pr(cx-15,nb+45,16,5,3,'g_blk','rgba(255,255,255,.03)',.5)}</g><g id="lr" style="transform-origin:${cx+6}px ${nb+28}px">${pr(cx+1,nb+28,12,20,2,'g_vc','rgba(255,255,255,.04)',.6)}${pr(cx-1,nb+45,16,5,3,'g_blk','rgba(255,255,255,.03)',.5)}</g><ellipse cx="${cx}" cy="3" rx="5" ry="3.2" fill="#111" stroke="rgba(255,255,255,.08)" stroke-width=".7"/><rect x="${cx-14}" y="2" width="28" height="26" rx="7" fill="url(#g_vh)" stroke="rgba(255,255,255,.07)" stroke-width="1"/><rect x="${cx-14}" y="2" width="28" height="26" rx="7" fill="url(#g_sheen)" opacity=".18"/><path d="M${cx-9},13 L${cx+9},13 L${cx+7},23 L${cx-7},23 Z" fill="#050505" stroke="rgba(255,255,255,.05)" stroke-width=".5"/><ellipse cx="${cx-5}" cy="16" rx="3.5" ry="2.2" fill="#DD0000" filter="url(#f_glow)"/><ellipse cx="${cx+5}" cy="16" rx="3.5" ry="2.2" fill="#DD0000" filter="url(#f_glow)"/><ellipse cx="${cx-5}" cy="16" rx="2.2" ry="1.4" fill="#FF4444"/><ellipse cx="${cx+5}" cy="16" rx="2.2" ry="1.4" fill="#FF4444"/><rect x="${cx-8}" y="24" width="3" height="3" rx=".8" fill="#111"/><rect x="${cx-4}" y="24" width="3" height="3" rx=".8" fill="#111"/><rect x="${cx}" y="24" width="3" height="3" rx=".8" fill="#111"/><rect x="${cx+4}" y="24" width="3" height="3" rx=".8" fill="#111"/>${pr(cx-5,27,10,5,1.5,'g_blk','rgba(255,255,255,.04)',.6)}${fl(cx-10,4,12,6,4)}</svg>`;}
+function svgR2D2(){const cx=22,W=44,H=66;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${D}<ellipse cx="${cx}" cy="18" rx="19" ry="18" fill="url(#g_r2w)" stroke="#8AACCC" stroke-width="1.2"/><ellipse cx="${cx}" cy="18" rx="19" ry="18" fill="url(#g_sheen)" opacity=".45"/>${pr(3,12,38,6,3,'g_r2b','rgba(0,0,0,.3)',.7)}<circle cx="${cx}" cy="16" r="8" fill="#1144AA" stroke="#0A2266" stroke-width="1.4"/><circle cx="${cx}" cy="16" r="5.5" fill="#0077DD"/><circle cx="${cx}" cy="16" r="3.5" fill="#22AAFF"/><circle cx="${cx+2}" cy="14" r="1.6" fill="rgba(255,255,255,.85)"/><circle cx="${cx}" cy="16" r=".8" fill="#CCFFFF" filter="url(#f_glow)"/><circle cx="7" cy="20" r="2" fill="#FF3300" stroke="rgba(0,0,0,.4)" stroke-width=".6"/><circle cx="37" cy="20" r="2" fill="#00FF77" stroke="rgba(0,0,0,.4)" stroke-width=".6"/>${pr(4,32,36,26,4,'g_r2w','#8AACCC',1.2)}${pr(4,32,10,26,3,'g_r2b','rgba(0,0,0,.3)',.7)}${pr(30,32,10,26,3,'g_r2b','rgba(0,0,0,.3)',.7)}<rect x="16" y="36" width="12" height="8" rx="1.5" fill="#0033AA" stroke="#002299" stroke-width=".6"/><circle cx="20" cy="40" r="1.8" fill="#FF4400"/><circle cx="25" cy="40" r="1.8" fill="#00CCFF"/><circle cx="22.5" cy="44" r="1.8" fill="#44FF88"/>${fl(7,34,8,12,2)}<g id="ll" style="transform-origin:10px 56px">${pr(4,54,12,10,3,'g_r2w','#8AACCC',.9)}${pr(2,61,16,6,4,'g_r2b','rgba(0,0,0,.3)',.7)}</g><g id="lr" style="transform-origin:34px 56px">${pr(28,54,12,10,3,'g_r2w','#8AACCC',.9)}${pr(26,61,16,6,4,'g_r2b','rgba(0,0,0,.3)',.7)}</g>${pr(14,58,16,6,4,'g_r2w','#8AACCC',.9)}</svg>`;}
+
+// Character roaming system
+const layer=document.getElementById('charLayer');
+function makeChar(svgFn,ix,iy){const el=document.createElement('div');el.className='lchar';el.innerHTML=svgFn();el.style.position='absolute';el.style.left=ix+'px';el.style.top=iy+'px';layer.appendChild(el);return el;}
+const VW=()=>window.innerWidth;const VH=()=>window.innerHeight;
+const ra=()=>Math.random()*Math.PI*2;const rs=(a,b)=>a+Math.random()*(b-a);
+const el1=makeChar(svgWorker,VW()*.1,VH()*.3);const el2=makeChar(svgEngineer,VW()*.25,VH()*.6);
+const el3=makeChar(svgStuart,VW()*.45,VH()*.2);const el4=makeChar(svgKevin,VW()*.6,VH()*.7);
+const vEl=makeChar(svgVader,VW()*.75,VH()*.4);const r2El=makeChar(svgR2D2,VW()*.88,VH()*.55);
+const CHARS=[
+  {el:el1,name:'Lego Obrero',type:'lego',x:VW()*.1,y:VH()*.3,vx:rs(.4,1.1)*Math.cos(ra()),vy:rs(.4,1.1)*Math.sin(ra()),bobT:0,bobOffset:0,facingRight:true,behaviour:'wander',behTimer:rs(3000,8000),misCD:false,nextM:rs(8000,14000),W:44,H:68,phrases:['¡A construir!','¿Dónde puse mi martillo?','¡El jefe no está mirando! 😈','Soy de PLÁSTICO. Sufre.','¡Ey, USUARIO! Holaaaa 👋','¡Cuidado, viene el jefe!']},
+  {el:el2,name:'Lego Ingeniero',type:'lego',x:VW()*.25,y:VH()*.6,vx:rs(.3,.9)*Math.cos(ra()),vy:rs(.3,.9)*Math.sin(ra()),bobT:0,bobOffset:0,facingRight:true,behaviour:'wander',behTimer:rs(4000,9000),misCD:false,nextM:rs(9000,16000),W:44,H:68,phrases:['Según mis cálculos, no cuadra.','Psst... esto es una PANTALLA.','Hola humano. Te veo. 👀','La física es una sugerencia.','¿Alguien ha visto mis planos?','No te muevas. O sí.']},
+  {el:el3,name:'Stuart',type:'minion',x:VW()*.45,y:VH()*.2,vx:rs(.6,1.4)*Math.cos(ra()),vy:rs(.6,1.4)*Math.sin(ra()),bobT:0,bobOffset:0,facingRight:true,behaviour:'wander',behTimer:rs(2000,6000),misCD:false,nextM:rs(6000,11000),W:44,H:76,phrases:['¡BANANAAAA! 🍌','¿Banana en el código?','¡Ey, TÚ! 🍌','¡TATATA! 🎶','Bello minion presente.','TRABAJO. Quizás.']},
+  {el:el4,name:'Kevin',type:'minion',x:VW()*.6,y:VH()*.7,vx:rs(.5,1.2)*Math.cos(ra()),vy:rs(.5,1.2)*Math.sin(ra()),bobT:0,bobOffset:0,facingRight:true,behaviour:'wander',behTimer:rs(3000,7000),misCD:false,nextM:rs(7000,13000),W:44,H:88,phrases:['Kevin aprueba esto.','¡Somos INFINITOS!','Este pixel es MÍO.','¡Para de scrollear!','Soy el más alto. Canon.','¿El CSS tiene sabor?']},
+  {el:vEl,name:'Darth Vader',type:'vader',x:VW()*.75,y:VH()*.4,vx:rs(.2,.7)*Math.cos(ra()),vy:rs(.2,.7)*Math.sin(ra()),bobT:0,bobOffset:0,facingRight:true,behaviour:'wander',behTimer:rs(5000,12000),misCD:false,nextM:rs(10000,18000),W:52,H:76,phrases:['Yo soy tu contratista.','JOIN THE DARK SIDE.','Perturbaciones en el DOM.','Tu Fuerza me molesta.','El lado oscuro paga mejor.','Pequeño humano... te observo.']},
+  {el:r2El,name:'R2-D2',type:'r2',x:VW()*.88,y:VH()*.55,vx:rs(.4,1.0)*Math.cos(ra()),vy:rs(.4,1.0)*Math.sin(ra()),bobT:0,bobOffset:0,facingRight:true,behaviour:'wander',behTimer:rs(3000,8000),misCD:false,nextM:rs(8000,14000),W:44,H:66,isR2:true,phrases:['BEEEP BOOP! 🤖','R2 detectó un bug.','SCANNING... ¡TÚ!','Datos cargados. 📡','Bweeeep (hola guapo/a).','BOOP BOOP (arte)']},
+];
+function getEl(c,id){return c.el.querySelector('#'+id);}
+function animateWalk(c,dt){
+  if(c.behaviour==='idle')return;
+  c.bobT+=dt*0.006;
+  const phase=c.bobT;
+  const speed=Math.sqrt(c.vx*c.vx+c.vy*c.vy);
+  const swing=Math.sin(phase*3)*18*Math.min(speed,1.5);
+  const ll=getEl(c,'ll'),lr=getEl(c,'lr'),al=getEl(c,'al'),ar=getEl(c,'ar');
+  if(ll)ll.style.transform=`rotate(${swing}deg)`;
+  if(lr)lr.style.transform=`rotate(${-swing}deg)`;
+  if(al&&!c.isR2)al.style.transform=`rotate(${-swing*.8}deg)`;
+  if(ar&&!c.isR2)ar.style.transform=`rotate(${swing*.8}deg)`;
+  c.bobOffset=Math.abs(Math.sin(phase*3))*2.5;
+}
+function updateBehaviour(c,dt){
+  c.behTimer-=dt;
+  if(c.behTimer>0)return;
+  const roll=Math.random();
+  if(roll<.35){c.behaviour='wander';const a=ra(),spd=rs(.4,1.2);c.vx=Math.cos(a)*spd;c.vy=Math.sin(a)*spd;c.behTimer=rs(2500,7000);}
+  else if(roll<.55){c.behaviour='dash';const a=ra(),spd=rs(2.5,4.5);c.vx=Math.cos(a)*spd;c.vy=Math.sin(a)*spd;c.behTimer=rs(400,900);showBubble(c.el,['¡WEEEE!','¡RUN!','TATATAAA!','ZOOM!','¡HUYE!'][Math.floor(Math.random()*5)],c.type,1200);setTimeout(()=>{const m=Math.sqrt(c.vx*c.vx+c.vy*c.vy);c.vx=(c.vx/m)*rs(.4,.9);c.vy=(c.vy/m)*rs(.4,.9);},c.behTimer);}
+  else if(roll<.72){c.behaviour='idle';c.vx=0;c.vy=0;c.behTimer=rs(1200,3000);if(Math.random()<.55)showBubble(c.el,c.phrases[Math.floor(Math.random()*c.phrases.length)],c.type,2800);}
+  else{c.behaviour='wander';const a=ra(),spd=rs(.1,.35);c.vx=Math.cos(a)*spd;c.vy=Math.sin(a)*spd;c.behTimer=rs(3000,6000);}
+}
+const TAPE_TOP=40,TAPE_BOT=40;
+let lt=0;
+function charLoop(ts){
+  const dt=Math.min(ts-lt,50);lt=ts;
+  const vw=VW(),vh=VH();
+  updateShips(dt);
+  CHARS.forEach(c=>{
+    updateBehaviour(c,dt);
+    c.x+=c.vx*(dt/16);c.y+=c.vy*(dt/16);
+    if(c.x<=0){c.x=0;c.vx=Math.abs(c.vx)*(.7+Math.random()*.3);fourthWall(c);}
+    if(c.x>=vw-c.W){c.x=vw-c.W;c.vx=-Math.abs(c.vx)*(.7+Math.random()*.3);fourthWall(c);}
+    if(c.y<=TAPE_TOP){c.y=TAPE_TOP;c.vy=Math.abs(c.vy)*(.7+Math.random()*.3);}
+    if(c.y>=vh-TAPE_BOT-c.H){c.y=vh-TAPE_BOT-c.H;c.vy=-Math.abs(c.vy)*(.7+Math.random()*.3);}
+    if(Math.random()<.008){c.vx+=(Math.random()-.5)*.4;c.vy+=(Math.random()-.5)*.4;const s=Math.sqrt(c.vx*c.vx+c.vy*c.vy);if(s>4){c.vx=(c.vx/s)*4;c.vy=(c.vy/s)*4;}if(s<.05&&c.behaviour==='wander'){c.vx=(Math.random()-.5)*.8;c.vy=(Math.random()-.5)*.8;}}
+    animateWalk(c,dt);
+    if(c.vx>.05&&!c.facingRight){c.facingRight=true;c.el.style.transform='scaleX(1)';}
+    if(c.vx<-.05&&c.facingRight){c.facingRight=false;c.el.style.transform='scaleX(-1)';}
+    c.el.style.left=c.x+'px';c.el.style.top=(c.y-(c.bobOffset||0))+'px';
+    c.nextM-=dt;
+    if(c.nextM<=0&&!c.misCD){c.misCD=true;doMischief(c);c.nextM=rs(10000,18000);setTimeout(()=>c.misCD=false,9000);}
+  });
+  requestAnimationFrame(charLoop);
+}
+requestAnimationFrame(ts=>{lt=ts;requestAnimationFrame(charLoop);});
+
+function fourthWall(c){if(Math.random()>.3)return;const msgs={lego:['¡BORDE! ¿Qué hay detrás?','¡Ey, USUARIO! Holaaaa 👋','Límite del CSS. El abismo.'],minion:['¡BORDE! ¿Banana al otro lado? 🍌','Aquí huele a overflow:hidden.','¡EY TÚ! ¿Tienes banana?'],vader:['El Lado Oscuro no tiene scroll infinito.','Aquí termina tu pantalla.','Pequeño humano... te observo.'],r2:['BWEEP — Límite detectado.','BOOP (no hay nada más allá)','Escaneo: 1 humano.']};const pool=msgs[c.type]||msgs.lego;showBubble(c.el,pool[Math.floor(Math.random()*pool.length)],c.type,2500);}
+function showBubble(el,text,type,dur){el.querySelectorAll('.lbubble').forEach(b=>b.remove());const b=document.createElement('div');b.className='lbubble'+(type?' '+type:'');b.textContent=text;b.style.transform=el.style.transform==='scaleX(-1)'?'translateX(-50%) scaleX(-1)':'translateX(-50%)';el.appendChild(b);setTimeout(()=>{b.style.transition='opacity .5s';b.style.opacity='0';},dur-500);setTimeout(()=>b.remove(),dur);}
+CHARS.forEach(c=>{c.el.addEventListener('click',()=>{const phrase=c.phrases[Math.floor(Math.random()*c.phrases.length)];showBubble(c.el,phrase,c.type,3200);c.vx=0;c.vy=0;c.behaviour='idle';c.behTimer=2500;addLog('info',`> ${c.name.toUpperCase()} :: "${phrase.substring(0,42)}${phrase.length>42?'...':''}"`);if(Math.random()<.4&&!c.misCD){c.misCD=true;setTimeout(()=>{doMischief(c);},1500);setTimeout(()=>c.misCD=false,10000);}});});
+
+// Force meter
+let force=72.3,forceDeleted=false,forceRestoreTimer=0;
+setInterval(()=>{
+  if(forceDeleted){forceRestoreTimer--;if(forceRestoreTimer<=0){forceDeleted=false;force=8;const fp=document.getElementById('forcePanel');fp.style.opacity='1';document.getElementById('forceVal').textContent=force.toFixed(1)+'%';document.getElementById('forceVal').className='hud-val green';addLog('warn','> SYSTEM :: Fuerza restaurada. Vader dormía.');}return;}
+  force=Math.min(100,force+(Math.random()*.55+.08));
+  const el=document.getElementById('forceVal');el.textContent=force.toFixed(1)+'%';
+  if(force>=95)el.className='hud-val red';else if(force>=75)el.className='hud-val amber';else el.className='hud-val green';
+  if(force>=100&&!forceDeleted){forceDeleted=true;forceRestoreTimer=30;triggerVaderDeleteForce();}
+},500);
+function triggerVaderDeleteForce(){
+  addLog('err','> VADER :: Nivel 100%. INACEPTABLE. Supresión activada...');
+  addLog('chaos','> FORCE :: ████████ ELIMINANDO ████████');
+  const dark=document.createElement('div');dark.className='dark-side';document.body.appendChild(dark);setTimeout(()=>dark.remove(),2800);
+  const wave=document.createElement('div');wave.className='force-wave';document.body.appendChild(wave);setTimeout(()=>wave.remove(),1800);
+  const fp=document.getElementById('forcePanel');fp.classList.add('deleting');setTimeout(()=>{fp.classList.remove('deleting');fp.style.opacity='0';},900);
+  const vChar=CHARS.find(c=>c.type==='vader');if(vChar){vChar.vx=(VW()/2-vChar.x)*0.004;vChar.vy=(VH()/2-vChar.y)*0.004;}
+  setTimeout(()=>{showBubble(vEl,'El 100%... no lo permitiré. Borrado.','vader',3500);shakeScreen();glitchTitle();},400);
+}
+function doMischief(c){
+  const r=Math.random();
+  if(c.type==='vader'){if(r<.35){glitchTitle();shakeScreen();showBubble(c.el,'He perturbado el DOM.','vader',3000);addLog('err','> VADER :: DOM perturbado.');}else if(r<.65){const d=document.createElement('div');d.className='dark-side';document.body.appendChild(d);setTimeout(()=>d.remove(),2800);showBubble(c.el,'Modo Lado Oscuro.','vader',2500);addLog('warn','> VADER :: Paleta secuestrada.');}else{const f=document.getElementById('footer');if(f&&f.style.opacity!=='0'){showBubble(c.el,'Este footer me molesta. Adiós.','vader',2500);f.classList.add('deleting');setTimeout(()=>{f.style.opacity='0';f.classList.remove('deleting');},900);setTimeout(()=>{f.style.opacity='1';addLog('info','> SYSTEM :: footer restaurado.');},10000);addLog('err','> VADER :: footer eliminado.');}else{glitchTitle();showBubble(c.el,'Yo soy el jefe de obra.','vader',2500);}}}
+  else if(c.type==='minion'){if(r<.3){rainBananas();showBubble(c.el,'¡¡¡BANANAAAAS!!!','minion',2500);addLog('warn','> MINION :: Protocolo banana.');}else if(r<.55){const mc=document.getElementById('minionCount'),old=mc.textContent;mc.textContent='∞';mc.style.color='#FF44FF';showBubble(c.el,'¡Somos INFINITOS! 🍌','minion',2500);addLog('chaos','> MINION :: count=∞.');setTimeout(()=>{mc.textContent=old;mc.style.color='';},5500);}else if(r<.78){CHARS.filter(x=>x.type==='minion').forEach(m=>{m.vx=(Math.random()-.5)*8;m.vy=(Math.random()-.5)*8;m.behaviour='dash';m.behTimer=1200;});showBubble(c.el,'¡¡¡TATATAAA!!! 🍌🍌🍌','minion',2000);addLog('chaos','> MINION :: Modo hiperactivo colectivo.');}else{document.body.classList.add('rainbow-mode');showBubble(c.el,'¡MODO ARCOÍRIS! 🌈🍌','minion',3000);addLog('chaos','> MINION :: hue-rotate inyectado.');setTimeout(()=>document.body.classList.remove('rainbow-mode'),3000);}}
+  else if(c.type==='lego'){if(r<.35){rainBricks();showBubble(c.el,'¡SE ME CAYÓ LA CAJA! 🧱','lego',2500);addLog('warn','> LEGO :: Bloque fuera de posición.');}else if(r<.65){const bars=['pf1','pf2','pf3','pf4','pf5'],pcts=['pp1','pp2','pp3','pp4','pp5'],i=Math.floor(Math.random()*5),bar=document.getElementById(bars[i]),pct=document.getElementById(pcts[i]);if(bar){const nv=Math.min(98,parseInt(bar.style.width)+Math.floor(Math.random()*12+5));bar.style.width=nv+'%';pct.textContent=nv+'%';syncTips();showBubble(c.el,'¡Le puse un ladrillo! Subió solo.','lego',2800);addLog('info','> LEGO :: Progreso actualizado.');}}else{const s=document.createElement('div');s.className='scratch-overlay';document.body.appendChild(s);setTimeout(()=>s.remove(),1200);showBubble(c.el,'Ops... arañé la pantalla.','lego',2000);addLog('err','> LEGO :: Pantalla arañada.');}}
+  else if(c.type==='r2'){if(r<.35){const b=document.createElement('div');b.className='scan-beam';document.body.appendChild(b);setTimeout(()=>b.remove(),1500);showBubble(c.el,'BWEEP — Escaneando... ¡Y A TI!','r2',3000);addLog('info','> R2D2 :: Escaneo. 1 humano.');}else if(r<.65){const sub=document.getElementById('mainSub'),orig=sub.textContent;sub.textContent='▶ R2-D2 AL MANDO · BEEEP BOOP ◀';sub.style.color='#00FF9D';showBubble(c.el,'He actualizado el subtítulo.','r2',2500);addLog('info','> R2D2 :: subtitle reescrito.');setTimeout(()=>{sub.textContent=orig;sub.style.color='';},7000);}else{for(let i=0;i<5;i++)setTimeout(()=>addLog('info',`> R2D2 :: BEEEEP BOOP WHRRRR ${'🤖'.repeat(i+1)}`),i*250);showBubble(c.el,'BEEEP BOOP WHRRRR!!! 🤖','r2',2000);}}
+}
+function glitchTitle(){const t=document.getElementById('mainTitle');t.classList.add('glitch');const alts=['EN CONSTRUCCIÓN','ERR_0x4A4_NULL','EL LADO OSCURO','████████████','CARGANDO...','¿HOLA HUMANO?','SISTEMA CAÍDO','B A N A N A'];const orig=t.textContent;t.textContent=alts[Math.floor(Math.random()*alts.length)];setTimeout(()=>{t.textContent=orig;t.classList.remove('glitch');},950);}
+function shakeScreen(){document.body.classList.add('shake-body');setTimeout(()=>document.body.classList.remove('shake-body'),500);}
+function rainBananas(){for(let i=0;i<9;i++)setTimeout(()=>{const b=document.createElement('div');b.className='banana-drop';b.textContent='🍌';b.style.left=Math.random()*90+'vw';b.style.setProperty('--d',(.7+Math.random()*.9)+'s');document.body.appendChild(b);setTimeout(()=>b.remove(),2000);},i*100);}
+function rainBricks(){const cols=['#FFD600','#FF6D00','#00B4FF','#FF2D2D','#00FF9D','#FF44FF'];for(let i=0;i<14;i++)setTimeout(()=>{const b=document.createElement('div');b.className='brick-drop';b.style.cssText=`left:${Math.random()*90}vw;background:${cols[Math.floor(Math.random()*cols.length)]}`;b.style.setProperty('--d',(.5+Math.random()*.9)+'s');document.body.appendChild(b);setTimeout(()=>b.remove(),2000);},i*70);}
+
+// Clock & bricks
+let secs=0;setInterval(()=>{secs++;const h=Math.floor(secs/3600).toString().padStart(2,'0'),m=Math.floor((secs%3600)/60).toString().padStart(2,'0'),s=(secs%60).toString().padStart(2,'0');document.getElementById('clock').textContent=`${h}:${m}:${s}`;},1000);
+let bricks=14820;setInterval(()=>{bricks+=Math.floor(Math.random()*15)+1;document.getElementById('bricks').textContent=bricks.toLocaleString('es-ES');},800);
+
+// Terminal
+const logs=[{t:'info',m:'> R2D2 :: Conexión establecida. BOOP.'},{t:'warn',m:'> ALERTA :: Vader encendió el sable en zona de obra.'},{t:'log',m:'> LEGO :: Ladrillo #14.821 colocado. Precisión: 99.7%'},{t:'log',m:'> MINION[Stuart] :: Banana? Trabajando. Quizás.'},{t:'info',m:'> JEDI :: Usando la Fuerza para mover bloques. +340%'},{t:'err',m:'> ERROR :: Minion[Kevin] comió el pegamento de nuevo.'},{t:'log',m:'> STRUCT :: Nivel 7 completado.'},{t:'warn',m:'> AVISO :: Lado Oscuro en sector B-12.'},{t:'info',m:'> R2D2 :: Planos actualizados. v4.20.'},{t:'log',m:'> LEGO :: 3.892 piezas hoy. Récord personal.'},{t:'chaos',m:'> MINION[Bob] :: Encontró peluche. -40% productividad.'},{t:'info',m:'> SISTEMA :: Código binario galáctico... ████████░░'},{t:'warn',m:'> VADER :: "Yo soy tu contratista." Obra continúa.'},{t:'log',m:'> CORE :: Módulos en compilación. ETA: desconocido.'},{t:'chaos',m:'> MINION[Stuart] :: ¡¡BANANA EN SECTOR 7!!'},{t:'err',m:'> R2D2 :: Intentó acceder al DOM. Rechazado.'},{t:'log',m:'> LEGO :: He pisado una pieza. Dolor simulado: 9/10.'},{t:'info',m:'> FORCE :: La Fuerza sube. Vader se acerca...'},{t:'warn',m:'> VADER :: Nivel de Fuerza en alarma.'},{t:'chaos',m:'> MINION[Kevin] :: ¿El CSS tiene sabor?'},{t:'info',m:'> GAME :: X-Wing en sector 4. Interceptando TIEs.'},{t:'warn',m:'> GAME :: ¡Asteroide en trayectoria de colisión!'},{t:'log',m:'> SHIP :: Millennium Falcon avistado. Rumbo: aleatorio.'}];
+let li=0;const logEl=document.getElementById('logLines');
+function addLog(type,msg){const d=document.createElement('div');d.className=`log-line ${type}`;d.textContent=msg;logEl.appendChild(d);const t=document.getElementById('terminal');t.scrollTop=t.scrollHeight;if(logEl.children.length>26)logEl.removeChild(logEl.firstChild);}
+setInterval(()=>{const l=logs[li%logs.length];li++;addLog(l.t,l.m);},2200);
+
+// Stars
+const sf=document.getElementById('starfield');
+for(let i=0;i<180;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2.5+.5;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${Math.random()*4+2}s;animation-delay:${Math.random()*4}s`;sf.appendChild(s);}
+const fpc=document.getElementById('forceParticles');
+for(let i=0;i<18;i++){const p=document.createElement('div');p.className='fp';const sz=Math.random()*40+10;p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;--d:${Math.random()*8+5}s;animation-delay:${Math.random()*8}s`;fpc.appendChild(p);}
+
+
+document.getElementById('sfYear2').textContent=new Date().getFullYear();
+
+// ══ CHAT SYSTEM ══════════════════════════════════════════
+// Responders with keyword triggers
+const chatResponders = [
+  { name:'LEGO OBRERO', type:'lego',
+    triggers:[/hola|hi|hey|buenas|saludos/i,/qué|que tal|cómo|como estás/i],
+    replies:[
+      '¡Hola! Aquí en la obra todo a tope. Llevamos {bricks} ladrillos colocados. 🧱',
+      '¡Buenas! Estamos en el nivel 7 de construcción. ¡Vuelve pronto!',
+      '¡Ey! Casi me caigo de los andamios. Menos mal que soy de plástico. 😤',
+      'Saludos desde la obra. Cuidado con los ladrillos sueltos por ahí.',
+    ]},
+  { name:'STUART', type:'minion',
+    triggers:[/banana|plátano|fruta|comida|hambre|comer/i,/minion|kevin|bob/i],
+    replies:[
+      '¡¡¡BANANAAAA!!! 🍌🍌🍌 ¿Tienes una? Te lo ruego.',
+      'Ba-ba-ba BANANA! Stuart aprueba este mensaje. 🍌',
+      '¡Kevin dice que no hay bananas en el código! ¡Mentira! Yo las puse. 🍌',
+      '¡TATATA! ¡TATATA! 🎶 Perdona, es que encontré una banana de píxeles.',
+    ]},
+  { name:'DARTH VADER', type:'vader',
+    triggers:[/fuerza|force|jedi|sith|dark|oscuro|vader/i,/ayuda|help|por favor|porfa/i],
+    replies:[
+      'El Lado Oscuro tiene mejor WiFi. Y mejores galletas.',
+      'No, YO soy tu contratista. Y cobro por adelantado.',
+      'La Fuerza está contigo... pero la web sigue en construcción.',
+      'Únete al Lado Oscuro. Tenemos CSS, LEGO y bananas infinitas.',
+      'He sentido tu mensaje en la Fuerza. Inténtalo de nuevo con más convicción.',
+    ]},
+  { name:'R2-D2', type:'r2',
+    replies:[
+      'BWEEP BOOP — Mensaje recibido. Escaneando amenazas... ninguna. Por ahora. 🤖',
+      'BOOP — R2 confirma: la web estará lista... pronto™. Definición de "pronto": desconocida.',
+      'BEEEEP — He actualizado los planos holográficos. Versión 4.20. 📡',
+      'WHRRRR BWEEP — Análisis: eres humano. Confirmado. Saludos, humano. 🤖',
+    ]},
+  { name:'KEVIN', type:'minion',
+    triggers:[/impresión|impresora|3d|print|filamento|pieza/i,/cuándo|cuando|lanzamiento|web|página/i],
+    replies:[
+      '¡Kevin sabe de impresión 3D! Cada capa importa como una línea de código. 🔵',
+      'La web estará lista cuando esté lista. Kevin lo ha decidido.',
+      '¡Impresión 3D es magia! Pones filamento, aprietas botón, salen cosas. ✨',
+      'Kevin ha calculado el lanzamiento: pronto. Bastante pronto. Tal vez.',
+    ]},
+  { name:'LEGO INGENIERO', type:'lego',
+    triggers:[/código|programar|web|html|css|javascript|dev/i,/diseño|color|fuente|font/i],
+    replies:[
+      'Según mis cálculos, este código tiene {rnd} bugs. Trabajando en ello. 📐',
+      'La web está construida con HTML, CSS, JS, La Fuerza y mucho café. ☕',
+      'He revisado los planos. Todo cuadra. Excepto ese div. Ese div me preocupa.',
+      'El diseño está en proceso. Los píxeles se colocan uno a uno con precisión.',
+    ]},
+];
+
+const genericReplies = [
+  {name:'LEGO OBRERO',  type:'lego',   reply:'Mensaje recibido. Procesando con precisión de ladrillo. 🧱'},
+  {name:'STUART',       type:'minion', reply:'¡BANANA! Ah perdona, ¿decías algo? 🍌'},
+  {name:'DARTH VADER',  type:'vader',  reply:'Tu mensaje llegó al Lado Oscuro. Será respondido... cuando convenga.'},
+  {name:'R2-D2',        type:'r2',     reply:'BWEEP — Mensaje registrado. Referencia: #R2-{rnd}. 🤖'},
+  {name:'KEVIN',        type:'minion', reply:'Kevin ha leído tu mensaje. Kevin asiente. Kevin vuelve a trabajar. 🔵'},
+  {name:'LEGO INGENIERO',type:'lego',  reply:'Interesante. Ladrillo #{rnd} dedicado a tu mensaje. 📐'},
+];
+
+function pickResponder(text){
+  for(const r of chatResponders){
+    if(r.triggers && r.triggers.some(t=>t.test(text))) return r;
+  }
+  return null;
+}
+function getRnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function fmtReply(s){
+  return s.replace('{bricks}',bricks.toLocaleString('es-ES')).replace(/\{rnd\}/g,Math.floor(Math.random()*9000+1000));
+}
+
+// Add message to CHAT (NOT to terminal log)
+function addChatMsg(text, isUser, responder){
+  const msgs = document.getElementById('chatMessages');
+  const div  = document.createElement('div');
+  div.className = 'chat-msg '+(isUser ? 'user' : 'bot '+(responder?.type||''));
+  const sender = document.createElement('span');
+  sender.className='chat-sender';
+  sender.textContent = isUser ? 'TÚ' : (responder?.name||'SISTEMA');
+  const bubble = document.createElement('div');
+  bubble.className='chat-bubble';
+  bubble.textContent = text;
+  div.appendChild(sender);
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  while(msgs.children.length > 50) msgs.removeChild(msgs.firstChild);
+}
+
+function showTyping(name){document.getElementById('chatTyping').textContent=name+' está escribiendo...';}
+function clearTyping(){document.getElementById('chatTyping').textContent='';}
+
+// Clear chat every 30s
+setInterval(()=>{
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML='';
+  addChatMsg('[ Canal reiniciado — escribe algo nuevo ]', false, {name:'SISTEMA', type:''});
+}, 30000);
+
+function sendChat(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text) return;
+  input.value='';
+  addChatMsg(text, true);
+
+  const responder = pickResponder(text);
+  const delay = 500 + Math.random()*700;
+
+  if(responder){
+    showTyping(responder.name);
+    setTimeout(()=>{
+      clearTyping();
+      addChatMsg(fmtReply(getRnd(responder.replies)), false, responder);
+      // 35% chance a second character chimes in
+      if(Math.random()<0.35){
+        const second=getRnd(genericReplies);
+        setTimeout(()=>{
+          showTyping(second.name);
+          setTimeout(()=>{
+            clearTyping();
+            addChatMsg(fmtReply(second.reply), false, {name:second.name,type:second.type});
+          }, 500+Math.random()*500);
+        }, 900+Math.random()*400);
+      }
+    }, delay);
+  } else {
+    const g=getRnd(genericReplies);
+    showTyping(g.name);
+    setTimeout(()=>{
+      clearTyping();
+      addChatMsg(fmtReply(g.reply), false, {name:g.name,type:g.type});
+    }, delay);
+  }
+}
+
+document.getElementById('chatSend').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){e.preventDefault();sendChat();}
+  e.stopPropagation(); // prevent game keys from intercepting
+});
+
+</script>
+
+<div id="devBar">
+  <a href="https://github.com/T30dev" target="_blank">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="#3A6A8A"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+    Developed by Teo
+  </a>
+</div>
+</body>
+</html>
