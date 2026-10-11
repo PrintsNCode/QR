@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Generator · PrintsNCode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0e0e0e;
+      --surface:  #151515;
+      --s2:       #1c1c1c;
+      --s3:       #222;
+      --border:   #2a2a2a;
+      --b2:       #363636;
+      --yellow:   #f5c400;
+      --ydim:     rgba(245,196,0,.09);
+      --yglow:    rgba(245,196,0,.2);
+      --cyan:     #47ffe8;
+      --text:     #e0e0e0;
+      --muted:    #4a4a4a;
+      --muted2:   #6e6e6e;
+      --fn:       'Share Tech Mono', monospace;
+      --fd:       'Black Ops One', cursive;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--fn);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* tape */
+    .tape {
+      height: 24px; flex-shrink: 0;
+      background: repeating-linear-gradient(-55deg, var(--yellow) 0,var(--yellow) 14px,#191200 14px,#191200 28px);
+      position: relative;
+    }
+    .tape::after {
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(to right,rgba(0,0,0,.4),transparent 12%,transparent 88%,rgba(0,0,0,.4));
+    }
+
+    /* header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.1rem 1.8rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .brand { display:flex; align-items:center; gap:.8rem; }
+    .hex {
+      width:40px; height:40px; background:var(--yellow);
+      clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .hex svg { width:18px; height:18px; color:#0e0e0e; }
+    .brand-name { font-family:var(--fd); font-size:1rem; color:var(--yellow); line-height:1; letter-spacing:.04em; }
+    .brand-sub  { font-size:.58rem; color:var(--muted2); letter-spacing:.12em; text-transform:uppercase; margin-top:.2rem; }
+    .tool-name  { font-family:var(--fd); font-size:1.25rem; letter-spacing:.08em; }
+    .tool-name em { color:var(--yellow); font-style:normal; }
+
+    /* layout */
+    main {
+      flex:1; display:grid; grid-template-columns:1fr 1fr;
+    }
+    @media(max-width:660px){
+      main { grid-template-columns:1fr; }
+      .right { border-left:none!important; border-top:1px solid var(--border); }
+      header { padding:1rem 1.2rem; }
+    }
+
+    /* columns */
+    .left  { border-right:1px solid var(--border); display:flex; flex-direction:column; }
+    .right { display:flex; flex-direction:column; }
+
+    /* col header */
+    .ch {
+      background:var(--surface); border-bottom:1px solid var(--border);
+      padding:.85rem 1.4rem; display:flex; align-items:center; gap:.55rem;
+    }
+    .ch-icon {
+      width:24px; height:24px; border:1px solid rgba(245,196,0,.3);
+      background:var(--ydim); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .ch-icon svg { width:12px; height:12px; color:var(--yellow); }
+    .ch-title { font-family:var(--fd); font-size:.85rem; letter-spacing:.05em; }
+
+    /* tabs */
+    .tabs { display:flex; border-bottom:1px solid var(--border); }
+    .tab {
+      flex:1; display:flex; align-items:center; justify-content:center; gap:.35rem;
+      padding:.7rem .3rem; background:none; border:none; border-right:1px solid var(--border);
+      color:var(--muted2); font-family:var(--fn); font-size:.65rem; letter-spacing:.1em;
+      text-transform:uppercase; cursor:pointer; transition:all .15s; position:relative;
+    }
+    .tab:last-child { border-right:none; }
+    .tab svg { width:12px; height:12px; }
+    .tab::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--yellow); transform:scaleX(0); transition:transform .15s; }
+    .tab.active { color:var(--yellow); background:var(--ydim); }
+    .tab.active::before { transform:scaleX(1); }
+    .tab:hover:not(.active) { color:var(--text); background:var(--s2); }
+
+    /* form body */
+    .fb { padding:1.3rem 1.4rem; flex:1; display:flex; flex-direction:column; gap:.8rem; overflow-y:auto; }
+
+    .field { display:flex; flex-direction:column; gap:.3rem; }
+    label { font-size:.58rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted2); }
+    input, textarea {
+      background:var(--s2); border:1px solid var(--b2); border-radius:2px;
+      color:var(--text); font-family:var(--fn); font-size:.78rem; padding:.55rem .8rem;
+      width:100%; outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    input::placeholder, textarea::placeholder { color:var(--muted); }
+    input:focus, textarea:focus { border-color:var(--yellow); box-shadow:0 0 0 2px var(--yglow); }
+    textarea { resize:none; }
+    .r2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+    .hint { font-size:.58rem; color:var(--muted); }
+
+    /* logo zone */
+    .logo-zone {
+      border:1px solid var(--b2); border-radius:2px; overflow:hidden;
+    }
+    .logo-head {
+      padding:.55rem .8rem; background:var(--s2);
+      display:flex; align-items:center; justify-content:space-between;
+      font-size:.58rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2);
+    }
+    .tog {
+      width:30px; height:16px; background:var(--s3); border:1px solid var(--b2);
+      border-radius:999px; cursor:pointer; position:relative; transition:background .15s;
+    }
+    .tog.on { background:var(--yellow); border-color:var(--yellow); }
+    .tog-t {
+      width:10px; height:10px; background:var(--muted); border-radius:50%;
+      position:absolute; top:2px; left:2px; transition:transform .15s, background .15s;
+    }
+    .tog.on .tog-t { transform:translateX(14px); background:#0e0e0e; }
+
+    .logo-body { padding:.75rem .8rem; display:flex; flex-direction:column; gap:.6rem; }
+
+    .drop-zone {
+      border:1px dashed var(--b2); border-radius:2px; padding:.65rem;
+      text-align:center; font-size:.62rem; color:var(--muted2);
+      cursor:pointer; position:relative; transition:border-color .15s, color .15s;
+    }
+    .drop-zone:hover { border-color:var(--yellow); color:var(--yellow); }
+    .drop-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; }
+    .drop-zone svg { display:block; margin:0 auto .3rem; opacity:.4; }
+
+    .logo-preview-img { width:44px; height:44px; object-fit:contain; background:white; border-radius:2px; }
+
+    .slider-row { display:flex; align-items:center; gap:.6rem; }
+    input[type=range] {
+      flex:1; padding:0; background:none; border:none; box-shadow:none; height:3px;
+      -webkit-appearance:none; cursor:pointer; outline:none;
+    }
+    input[type=range]::-webkit-slider-runnable-track { background:var(--b2); height:3px; border-radius:1px; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:13px; height:13px;
+      background:var(--yellow); border-radius:50%; margin-top:-5px;
+    }
+    input[type=range]:focus { border:none; box-shadow:none; }
+    .sv { font-size:.62rem; color:var(--yellow); min-width:28px; text-align:right; }
+
+    .btn-clear {
+      margin-top:auto; background:none; border:1px solid var(--b2); border-radius:2px;
+      color:var(--muted2); font-family:var(--fn); font-size:.62rem;
+      letter-spacing:.12em; padding:.55rem; cursor:pointer; text-transform:uppercase; transition:all .15s;
+    }
+    .btn-clear:hover { color:var(--text); border-color:#555; background:var(--s2); }
+
+    /* QR display */
+    .qr-display {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      padding:2rem; background:var(--bg);
+    }
+    .qr-wrap { position:relative; width:220px; height:220px; }
+    .c { position:absolute; width:16px; height:16px; border-color:var(--yellow); border-style:solid; z-index:2; }
+    .c.tl{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+    .c.tr{top:-1px;right:-1px;border-width:2px 2px 0 0;}
+    .c.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px;}
+    .c.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+    .qr-box {
+      position:absolute; inset:0; background:white;
+      border:1px solid var(--b2); display:flex; align-items:center; justify-content:center; overflow:hidden;
+    }
+    .qr-box canvas { width:100%!important; height:100%!important; object-fit:contain; display:block; }
+    .qr-empty { position:absolute; inset:0; }
+    #anim-canvas { width:100%; height:100%; display:block; }
+
+    /* downloads */
+    .dl { border-top:1px solid var(--border); padding:1rem 1.4rem; background:var(--surface); }
+    .sec-label {
+      font-size:.56rem; letter-spacing:.15em; text-transform:uppercase;
+      color:var(--muted); margin-bottom:.6rem; display:flex; align-items:center; gap:.45rem;
+    }
+    .sec-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .btn-row { display:grid; grid-template-columns:repeat(3,1fr); gap:.4rem; margin-bottom:.4rem; }
+
+    .btn-dl {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:.28rem; padding:.6rem .2rem; background:var(--s2); border:1px solid var(--b2);
+      border-radius:2px; color:var(--muted2); font-family:var(--fn);
+      font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s;
+    }
+    .btn-dl svg { width:16px; height:16px; }
+    .btn-dl:hover:not(:disabled) { border-color:var(--yellow); color:var(--yellow); background:var(--ydim); box-shadow:0 0 7px var(--yglow); }
+    .btn-dl:disabled { opacity:.18; cursor:not-allowed; }
+
+    .btn-copy {
+      width:100%; display:flex; align-items:center; justify-content:center; gap:.4rem;
+      padding:.55rem; background:var(--s2); border:1px solid var(--b2); border-radius:2px;
+      color:var(--muted2); font-family:var(--fn); font-size:.62rem;
+      letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s;
+    }
+    .btn-copy svg { width:12px; height:12px; }
+    .btn-copy:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); background:rgba(71,255,232,.06); }
+    .btn-copy.ok { border-color:var(--cyan); color:var(--cyan); background:rgba(71,255,232,.06); }
+    .btn-copy:disabled { opacity:.18; cursor:not-allowed; }
+
+    /* data */
+    .data-zone { border-top:1px solid var(--border); padding:.75rem 1.4rem; }
+    .data-pre {
+      background:var(--s2); border:1px solid var(--border); border-radius:2px;
+      padding:.55rem .75rem; font-size:.62rem; color:var(--muted2);
+      max-height:58px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; line-height:1.5;
+    }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      padding:.5rem 1.8rem; display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:.4rem; font-size:.56rem; color:var(--muted); letter-spacing:.1em; text-transform:uppercase;
+    }
+
+    .hidden { display:none!important; }
+    ::-webkit-scrollbar{width:3px;}
+    ::-webkit-scrollbar-track{background:var(--surface);}
+    ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+  </style>
+</head>
+<body>
+
+<div class="tape"></div>
+
+<header>
+  <div class="brand">
+    <div class="hex">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">PrintsNCode</div>
+      <div class="brand-sub">Impresión 3D · Código</div>
+    </div>
+  </div>
+  <div class="tool-name">QR <em>GEN</em></div>
+</header>
+
+<main>
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="tabs">
+      <button class="tab active" data-tab="url" onclick="setTab('url')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        URL
+      </button>
+      <button class="tab" data-tab="text" onclick="setTab('text')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Texto
+      </button>
+      <button class="tab" data-tab="contact" onclick="setTab('contact')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Contacto
+      </button>
+    </div>
+
+    <div class="ch">
+      <div class="ch-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <span class="ch-title" id="ch-title">URL</span>
+    </div>
+
+    <div class="fb">
+
+      <div id="f-url">
+        <div class="field">
+          <label>Dirección web</label>
+          <input type="url" id="url-input" placeholder="ejemplo.com" oninput="update()" />
+          <span class="hint">// https:// se añade si falta</span>
+        </div>
+      </div>
+
+      <div id="f-text" class="hidden">
+        <div class="field">
+          <label>Texto</label>
+          <textarea id="text-input" rows="5" placeholder="Escribe el texto..." oninput="update()"></textarea>
+        </div>
+      </div>
+
+      <div id="f-contact" class="hidden" style="display:flex;flex-direction:column;gap:.7rem;">
+        <div class="r2">
+          <div class="field"><label>Nombre</label><input type="text" id="c-fn" placeholder="Juan" oninput="update()"/></div>
+          <div class="field"><label>Apellido</label><input type="text" id="c-ln" placeholder="García" oninput="update()"/></div>
+        </div>
+        <div class="field"><label>Teléfono</label><input type="tel" id="c-ph" placeholder="+34 600 000 000" oninput="update()"/></div>
+        <div class="field"><label>Email</label><input type="email" id="c-em" placeholder="juan@ejemplo.com" oninput="update()"/></div>
+        <div class="field"><label>Empresa</label><input type="text" id="c-or" placeholder="PrintsNCode" oninput="update()"/></div>
+        <div class="field"><label>Web</label><input type="url" id="c-ur" placeholder="https://ejemplo.com" oninput="update()"/></div>
+      </div>
+
+      <!-- logo -->
+      <div class="logo-zone">
+        <div class="logo-head">
+          <span>Logo central</span>
+          <div class="tog" id="tog" onclick="toggleLogo()"><div class="tog-t"></div></div>
+        </div>
+        <div id="logo-body" class="logo-body hidden">
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" accept="image/*" onchange="loadLogo(event)"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span id="drop-label">Subir imagen</span>
+          </div>
+          <img id="logo-img" class="logo-preview-img hidden" src="" alt="logo"/>
+          <div class="slider-row">
+            <label style="font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);min-width:max-content;">Tamaño</label>
+            <input type="range" id="logo-sz" min="10" max="28" value="18" oninput="onLogoSize()"/>
+            <span class="sv" id="logo-sv">18%</span>
+          </div>
+          <span class="hint">// Nivel H — 30% tolerancia</span>
+        </div>
+      </div>
+
+      <button class="btn-clear" onclick="reset()">[ limpiar ]</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="ch">
+      <div class="ch-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+      </div>
+      <span class="ch-title">QR</span>
+    </div>
+
+    <div class="qr-display">
+      <div class="qr-wrap">
+        <div class="c tl"></div><div class="c tr"></div>
+        <div class="c bl"></div><div class="c br"></div>
+        <div class="qr-box" id="qr-box">
+          <div class="qr-empty" id="qr-empty">
+            <canvas id="anim-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dl">
+      <div class="sec-label">Exportar</div>
+      <div class="btn-row" style="grid-template-columns:1fr">
+        <button class="btn-dl" id="b-png" onclick="dlPNG()" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>PNG
+        </button>
+      </div>
+      <button class="btn-copy" id="b-copy" onclick="copyData()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copiar datos
+      </button>
+    </div>
+
+    <div class="data-zone hidden" id="data-zone">
+      <div class="sec-label">Codificado</div>
+      <pre class="data-pre" id="data-pre"></pre>
+    </div>
+  </div>
+
+</main>
+
+<div class="tape"></div>
+
+<footer>
+  <span>PrintsNCode © 2025</span>
+  <span>Sin almacenamiento · Offline-ready</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<script>
+/* ── state ── */
+let tab       = 'url';
+let data      = '';
+let logoOn    = false;
+let logoImg   = null;
+let logoFrac  = 0.18;
+let matrix    = null;   // { grid: bool[][], n: number }
+
+const TITLES = { url:'URL', text:'Texto', contact:'Contacto' };
+
+/* ── tab ── */
+function setTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+  ['url','text','contact'].forEach(id => document.getElementById('f-'+id).classList.toggle('hidden', id !== t));
+  document.getElementById('ch-title').textContent = TITLES[t];
+  update();
+}
+
+/* ── input helpers ── */
+const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+
+function getData() {
+  if (tab === 'url') {
+    const u = g('url-input');
+    if (!u) return '';
+    return (u.startsWith('http://') || u.startsWith('https://')) ? u : 'https://' + u;
+  }
+  if (tab === 'text') return g('text-input');
+  if (tab === 'contact') {
+    const f=g('c-fn'),l=g('c-ln'),p=g('c-ph'),e=g('c-em'),o=g('c-or'),u=g('c-ur');
+    if (!f&&!l&&!p&&!e) return '';
+    return `BEGIN:VCARD\nVERSION:3.0\nFN:${f} ${l}\nN:${l};${f};;;\nORG:${o}\nTEL:${p}\nEMAIL:${e}\nURL:${u}\nEND:VCARD`;
+  }
+  return '';
+}
+
+/* ── matrix extraction (black-on-white render) ── */
+function buildMatrix(qrData, level) {
+  const SIZE = 210;
+  const tmp  = document.createElement('canvas');
+  new QRious({ element:tmp, value:qrData, size:SIZE, background:'white', foreground:'black', level: level||'L', padding:0 });
+  const ctx  = tmp.getContext('2d');
+  const px   = ctx.getImageData(0,0,SIZE,SIZE).data;
+
+  // bounding box of dark pixels
+  let r0=SIZE,r1=0,c0=SIZE,c1=0;
+  for (let y=0;y<SIZE;y++) for (let x=0;x<SIZE;x++) {
+    if (px[(y*SIZE+x)*4]<128) { if(y<r0)r0=y; if(y>r1)r1=y; if(x<c0)c0=x; if(x>c1)c1=x; }
+  }
+  if (r0>r1) return null;
+
+  const W = c1-c0+1, H = r1-r0+1;
+
+  // count modules: scan midrow for transitions
+  const midY = Math.round((r0+r1)/2);
+  let trans=0, last=false;
+  for (let x=c0;x<=c1;x++) {
+    const dark = px[(midY*SIZE+x)*4]<128;
+    if (dark!==last) trans++;
+    last=dark;
+  }
+  // snap to nearest valid QR module count (always odd, 21..177)
+  let est = Math.round(trans/2);
+  const valid=[21,25,29,33,37,41,45,49,53,57,61,65,69,73,77,81,85,89,93,97,101,105,109,113,117,121,125,129,133,137,141,145,149,153,157,161,165,169,173,177];
+  const n = valid.reduce((a,b)=>Math.abs(b-est)<Math.abs(a-est)?b:a);
+
+  const stepX = W/n, stepY = H/n;
+  const grid  = [];
+  for (let r=0;r<n;r++) {
+    grid[r]=[];
+    for (let c=0;c<n;c++) {
+      const x = Math.min(Math.round(c0+(c+.5)*stepX), SIZE-1);
+      const y = Math.min(Math.round(r0+(r+.5)*stepY), SIZE-1);
+      grid[r][c] = px[(y*SIZE+x)*4]<128;
+    }
+  }
+  return { grid, n };
+}
+
+/* ── draw QR to canvas ── */
+function drawToCanvas(canvas, qrData) {
+  const S   = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const tmp = document.createElement('canvas');
+  new QRious({ element:tmp, value:qrData, size:S, background:'white', foreground:'black',
+                level: logoOn?'H':'L', padding:null });
+  ctx.clearRect(0,0,S,S);
+  ctx.drawImage(tmp,0,0);
+  if (logoOn && logoImg) {
+    const side = S * logoFrac;
+    const lx = (S-side)/2, ly = (S-side)/2;
+    const pad = side * .12;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(lx-pad, ly-pad, side+pad*2, side+pad*2);
+    ctx.drawImage(logoImg, lx, ly, side, side);
+  }
+}
+
+/* ── update ── */
+function update() {
+  data = getData();
+  const btns = ['b-png','b-copy'];
+
+  if (!data) {
+    clearQR();
+    btns.forEach(id => document.getElementById(id).disabled=true);
+    matrix = null;
+    return;
+  }
+
+  // render preview
+  const box = document.getElementById('qr-box');
+  if (window._qrAnim) window._qrAnim.stop();
+  document.getElementById('qr-empty').style.display='none';
+  box.querySelectorAll('canvas:not(#anim-canvas)').forEach(e=>e.remove());
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 300;
+  cv.style.cssText='width:100%;height:100%;display:block;';
+  box.appendChild(cv);
+  drawToCanvas(cv, data);
+
+  // build matrix
+  matrix = buildMatrix(data, logoOn?'H':'L');
+
+  btns.forEach(id => document.getElementById(id).disabled=false);
+  document.getElementById('data-zone').classList.remove('hidden');
+  document.getElementById('data-pre').textContent = data;
+}
+
+function clearQR() {
+  const box = document.getElementById('qr-box');
+  box.querySelectorAll('canvas:not(#anim-canvas)').forEach(e=>e.remove());
+  document.getElementById('qr-empty').style.display='block';
+  document.getElementById('data-zone').classList.add('hidden');
+  if (window._qrAnim) window._qrAnim.start();
+}
+
+/* ── logo ── */
+function toggleLogo() {
+  logoOn = !logoOn;
+  document.getElementById('tog').classList.toggle('on', logoOn);
+  document.getElementById('logo-body').classList.toggle('hidden', !logoOn);
+  if (data) update();
+}
+function loadLogo(e) {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      logoImg = img;
+      const prev = document.getElementById('logo-img');
+      prev.src = ev.target.result;
+      prev.classList.remove('hidden');
+      document.getElementById('drop-label').textContent = f.name;
+      if (data) update();
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+}
+function onLogoSize() {
+  const v = parseInt(document.getElementById('logo-sz').value);
+  logoFrac = v/100;
+  document.getElementById('logo-sv').textContent = v+'%';
+  if (data) update();
+}
+
+/* ── PNG ── */
+function dlPNG() {
+  if (!data) return;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 1200;
+  drawToCanvas(cv, data);
+  const a = document.createElement('a');
+  a.download = `qr-${tab}.png`;
+  a.href = cv.toDataURL('image/png');
+  a.click();
+}
+
+/* ── SVG — solo módulos, sin fondo ── */
+function dlSVG() {
+  if (!data || !matrix) return;
+  const { grid, n } = matrix;
+  const cell  = 10;
+  const total = n * cell;   // no quiet zone in output — purely the modules
+
+  let paths = '';
+  for (let r=0;r<n;r++)
+    for (let c=0;c<n;c++)
+      if (grid[r][c])
+        paths += `<rect x="${c*cell}" y="${r*cell}" width="${cell}" height="${cell}"/>`;
+
+  // logo as embedded image if present
+  let logoEl = '';
+  if (logoOn && logoImg) {
+    const side = total * logoFrac;
+    const lx = (total-side)/2, ly = (total-side)/2;
+    const pad = side*.12;
+    const tc = document.createElement('canvas'); tc.width=tc.height=200;
+    tc.getContext('2d').drawImage(logoImg,0,0,200,200);
+    logoEl = `<rect x="${lx-pad}" y="${ly-pad}" width="${side+pad*2}" height="${side+pad*2}" fill="white"/>` +
+             `<image href="${tc.toDataURL()}" x="${lx}" y="${ly}" width="${side}" height="${side}"/>`;
+  }
+
+  const svg =
+`<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 ${total} ${total}" width="${total}" height="${total}">
+  <g fill="black">${paths}</g>
+  ${logoEl}
+</svg>`;
+
+  const a = document.createElement('a');
+  a.download = `qr-${tab}.svg`;
+  a.href = URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+  a.click();
+}
+
+/* ── STL — solo módulos en relieve, sin placa base ── */
+function dlSTL() {
+  if (!data || !matrix) return;
+  const { grid, n } = matrix;
+
+  const cell = 1.0;   // mm per module
+  const h    = 1.0;   // mm height of each raised module (no base plate)
+
+  const tris = [];
+  function quad(nx,ny,nz,a,b,c,d) {
+    tris.push([nx,ny,nz,a,b,c]);
+    tris.push([nx,ny,nz,a,c,d]);
+  }
+
+  for (let r=0;r<n;r++) {
+    for (let c=0;c<n;c++) {
+      if (!grid[r][c]) continue;
+      const x0=c*cell, x1=x0+cell, y0=r*cell, y1=y0+cell;
+      // bottom face of this module (sits on z=0)
+      quad(0,0,-1, [x0,y0,0],[x1,y0,0],[x1,y1,0],[x0,y1,0]);
+      // top face
+      quad(0,0, 1, [x0,y0,h],[x0,y1,h],[x1,y1,h],[x1,y0,h]);
+      // sides — only exposed faces (neighbour is empty or edge)
+      if (r===0    ||!grid[r-1][c]) quad(0,-1,0,[x0,y0,0],[x1,y0,0],[x1,y0,h],[x0,y0,h]);
+      if (r===n-1  ||!grid[r+1][c]) quad(0, 1,0,[x0,y1,0],[x0,y1,h],[x1,y1,h],[x1,y1,0]);
+      if (c===0    ||!grid[r][c-1]) quad(-1,0,0,[x0,y0,0],[x0,y0,h],[x0,y1,h],[x0,y1,0]);
+      if (c===n-1  ||!grid[r][c+1]) quad( 1,0,0,[x1,y0,0],[x1,y1,0],[x1,y1,h],[x1,y0,h]);
+    }
+  }
+
+  let stl = 'solid qr_printsncode\n';
+  for (const [nx,ny,nz,v0,v1,v2] of tris) {
+    stl += `  facet normal ${nx} ${ny} ${nz}\n    outer loop\n`;
+    stl += `      vertex ${v0[0].toFixed(4)} ${v0[1].toFixed(4)} ${v0[2].toFixed(4)}\n`;
+    stl += `      vertex ${v1[0].toFixed(4)} ${v1[1].toFixed(4)} ${v1[2].toFixed(4)}\n`;
+    stl += `      vertex ${v2[0].toFixed(4)} ${v2[1].toFixed(4)} ${v2[2].toFixed(4)}\n`;
+    stl += '    endloop\n  endfacet\n';
+  }
+  stl += 'endsolid qr_printsncode\n';
+
+  const a = document.createElement('a');
+  a.download = `qr-${tab}.stl`;
+  a.href = URL.createObjectURL(new Blob([stl],{type:'application/octet-stream'}));
+  a.click();
+}
+
+/* ── copy ── */
+async function copyData() {
+  if (!data) return;
+  await navigator.clipboard.writeText(data).catch(()=>{});
+  const btn = document.getElementById('b-copy');
+  btn.classList.add('ok');
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>¡Copiado!`;
+  setTimeout(()=>{
+    btn.classList.remove('ok');
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="1"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar datos`;
+  },2000);
+}
+
+/* ── reset ── */
+function reset() {
+  ['url-input','text-input','c-fn','c-ln','c-ph','c-em','c-or','c-ur'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  logoImg=null; logoOn=false;
+  document.getElementById('tog').classList.remove('on');
+  document.getElementById('logo-body').classList.add('hidden');
+  document.getElementById('logo-img').classList.add('hidden');
+  document.getElementById('drop-label').textContent='Subir imagen';
+  clearQR();
+  ['b-png','b-copy'].forEach(id=>document.getElementById(id).disabled=true);
+  matrix=null; data='';
+}
+</script>
+
+<script>
+/* ── Idle QR animation ─────────────────────────────────────────
+   Draws a fake QR grid that continuously mutates — cells flip
+   on/off with organic timing. Stops when real QR is rendered.
+──────────────────────────────────────────────────────────────── */
+(function() {
+  const cv  = document.getElementById('anim-canvas');
+  const N   = 25;          // grid size (modules)
+  const PAD = 2;           // quiet-zone modules each side
+  let   W, cellW;
+  let   animId = null;
+  let   running = true;
+
+  // Each cell has: value (0/1), target (0/1), progress (0..1), speed
+  const cells = [];
+  for (let r = 0; r < N; r++) {
+    cells[r] = [];
+    for (let c = 0; c < N; c++) {
+      // Fixed finder patterns (top-left, top-right, bottom-left)
+      const inFinder = isFinder(r, c);
+      cells[r][c] = {
+        v:       inFinder ? 1 : (Math.random() > 0.6 ? 1 : 0),
+        target:  inFinder ? 1 : (Math.random() > 0.6 ? 1 : 0),
+        p:       Math.random(),   // current interpolation
+        speed:   0.008 + Math.random() * 0.018,
+        delay:   Math.random() * 120,
+        finder:  inFinder,
+        finderColor: isFinderInner(r, c) ? 'inner' : isFinderOuter(r, c) ? 'outer' : 'gap'
+      };
+    }
+  }
+
+  function isFinder(r, c) {
+    return isFinderOuter(r,c) || isFinderInner(r,c) || isFinderGap(r,c);
+  }
+  function isFinderOuter(r, c) {
+    // 7x7 outer rings at 3 corners
+    const corners = [[0,0],[0,N-7],[N-7,0]];
+    return corners.some(([rr,cc]) => r>=rr&&r<=rr+6&&c>=cc&&c<=cc+6 &&
+      (r===rr||r===rr+6||c===cc||c===cc+6));
+  }
+  function isFinderInner(r, c) {
+    const corners = [[2,2],[2,N-5],[N-5,2]];
+    return corners.some(([rr,cc]) => r>=rr&&r<=rr+2&&c>=cc&&c<=cc+2);
+  }
+  function isFinderGap(r, c) {
+    const corners = [[0,0],[0,N-7],[N-7,0]];
+    return corners.some(([rr,cc]) =>
+      r>=rr+1&&r<=rr+5&&c>=cc+1&&c<=cc+5 &&
+      !(r>=rr+2&&r<=rr+4&&c>=cc+2&&c<=cc+4) &&
+      !isFinderOuter(r,c));
+  }
+
+  function resize() {
+    const box = cv.parentElement;
+    W = box.clientWidth || 220;
+    cv.width  = W;
+    cv.height = W;
+    cellW = W / N;
+  }
+
+  let frame = 0;
+  function tick() {
+    if (!running) return;
+    animId = requestAnimationFrame(tick);
+    frame++;
+
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, W, W);
+
+    // white background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, W, W);
+
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const cell = cells[r][c];
+
+        if (cell.finder) {
+          // draw finder patterns solid — they never animate
+          const isDark = cell.finderColor === 'outer' || cell.finderColor === 'inner';
+          ctx.fillStyle = isDark
+            ? `rgba(0,0,0,1)`
+            : `rgba(255,255,255,1)`;
+          ctx.fillRect(c * cellW, r * cellW, cellW, cellW);
+          continue;
+        }
+
+        // Animate non-finder cells
+        cell.delay--;
+        if (cell.delay <= 0) {
+          cell.p += cell.speed;
+          if (cell.p >= 1) {
+            cell.p = 0;
+            cell.v = cell.target;
+            // pick new target and timing
+            cell.target = Math.random() > 0.55 ? 1 : 0;
+            cell.speed  = 0.006 + Math.random() * 0.022;
+            cell.delay  = 10 + Math.random() * 80;
+          }
+        }
+
+        // Interpolated alpha between current value and target
+        const alpha = cell.v === 1
+          ? 1 - cell.p * (cell.v !== cell.target ? 1 : 0)
+          : cell.p * (cell.v !== cell.target ? 1 : 0);
+
+        // Yellow tint on dark cells: rgba lerp between yellow and black
+        const yr = 245, yg = 196, yb = 0;
+        const pulse = 0.18 + 0.18 * Math.sin(frame * 0.04 + r * 0.3 + c * 0.2);
+        const rr = Math.round(yr * pulse);
+        const gg = Math.round(yg * pulse);
+        const bb = Math.round(yb * pulse);
+
+        if (alpha > 0.02) {
+          ctx.fillStyle = `rgba(${rr},${gg},${bb},${alpha.toFixed(3)})`;
+          const inset = cellW * 0.04;
+          ctx.fillRect(c*cellW + inset, r*cellW + inset, cellW - inset*2, cellW - inset*2);
+        }
+      }
+    }
+
+    // Scan line effect — a thin horizontal band sweeping down
+    const scanY = ((frame * 0.6) % (W + 40)) - 20;
+    const grad = ctx.createLinearGradient(0, scanY - 8, 0, scanY + 8);
+    grad.addColorStop(0,   'rgba(245,196,0,0)');
+    grad.addColorStop(0.5, 'rgba(245,196,0,0.06)');
+    grad.addColorStop(1,   'rgba(245,196,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, scanY - 8, W, 16);
+  }
+
+  function start() {
+    running = true;
+    resize();
+    if (!animId) tick();
+  }
+
+  function stop() {
+    running = false;
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+  }
+
+  // Expose so update() can hide/show it
+  window._qrAnim = { start, stop };
+
+  // Start on load
+  window.addEventListener('resize', resize);
+  start();
+})();
+</script>
+</body>
+</html>
